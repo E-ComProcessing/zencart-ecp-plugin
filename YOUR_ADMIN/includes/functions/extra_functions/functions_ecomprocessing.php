@@ -19,7 +19,7 @@
 
 if (!defined('IS_ADMIN_FLAG')) die('Illegal Access');
 
-if (emp_get_is_payment_module_index_action()) {
+if (ecp_get_is_payment_module_index_action()) {
 ?>
     <style type="text/css">
         span.ecomprocessing-toggle  {
@@ -37,12 +37,12 @@ if (emp_get_is_payment_module_index_action()) {
 <?php
 }
 
-if (emp_get_is_payment_module_edit_action()) {
+if (ecp_get_is_payment_module_edit_action()) {
     $jsPath = "includes/javascript/ecomprocessing/";
     $cssPath = "includes/css/ecomprocessing/";
-    $zenVersion = emp_get_zencart_version();
+    $zenVersion = ecp_get_zencart_version();
 
-    echo emp_add_external_resources(
+    echo ecp_add_external_resources(
         array(
             "jquery-1.12.3.min.js",
             "bootstrap.min.js",
@@ -116,11 +116,11 @@ if (emp_get_is_payment_module_edit_action()) {
  * @param array $resourceNames
  * @return string
  */
-function emp_add_external_resources($resourceNames)
+function ecp_add_external_resources($resourceNames)
 {
     $html = "";
     foreach ($resourceNames as $key => $resourceName) {
-        $html .= emp_add_external_resource($resourceName);
+        $html .= ecp_add_external_resource($resourceName);
     }
     return $html;
 }
@@ -130,20 +130,20 @@ function emp_add_external_resources($resourceNames)
  * @param string $resourcePath
  * @return string
  */
-function emp_add_external_resource($resourcePath)
+function ecp_add_external_resource($resourcePath)
 {
-    $isResourceJavaScript = emp_get_string_ends_with($resourcePath, '.js');
+    $isResourceJavaScript = ecp_get_string_ends_with($resourcePath, '.js');
 
     $includePath =
         "includes/" .
         ($isResourceJavaScript ? "javascript/" : "css/") .
         "ecomprocessing/";
 
-    if (emp_get_string_starts_with($resourcePath, 'jquery')) {
+    if (ecp_get_string_starts_with($resourcePath, 'jquery')) {
         $includePath .= "jQueryExtensions/";
-    } elseif (emp_get_string_starts_with($resourcePath, 'bootstrap')) {
+    } elseif (ecp_get_string_starts_with($resourcePath, 'bootstrap')) {
         $includePath .= "bootstrap/";
-    } elseif (emp_get_string_starts_with($resourcePath, 'font-awesome')) {
+    } elseif (ecp_get_string_starts_with($resourcePath, 'font-awesome')) {
         $includePath .= "font-awesome/";
     }
 
@@ -158,10 +158,10 @@ function emp_add_external_resource($resourcePath)
  * Check if Current Page is Nodule Esit Page
  * @return bool
  */
-function emp_get_is_payment_module_edit_action()
+function ecp_get_is_payment_module_edit_action()
 {
     return
-        emp_get_is_payment_module_index_action() &&
+        ecp_get_is_payment_module_index_action() &&
         isset($_GET['action']) &&
         (strtolower($_GET['action'] == 'edit'));
 }
@@ -170,7 +170,7 @@ function emp_get_is_payment_module_edit_action()
  * Check if Current Page is Module Preview Page
  * @return bool
  */
-function emp_get_is_payment_module_index_action()
+function ecp_get_is_payment_module_index_action()
 {
     return
         isset($_GET['set']) &&
@@ -187,7 +187,7 @@ function emp_get_is_payment_module_index_action()
  * @param array $attributes
  * @return string
  */
-function emp_convert_attributes_array_to_html($attributes)
+function ecp_convert_attributes_array_to_html($attributes)
 {
     if (is_array($attributes)) {
         $html = '';
@@ -204,7 +204,7 @@ function emp_convert_attributes_array_to_html($attributes)
  * Determines the version of zencart (Used to include Resources for old versions)
  * @return string
  */
-function emp_get_zencart_version()
+function ecp_get_zencart_version()
 {
     global $db;
 
@@ -230,15 +230,15 @@ function emp_get_zencart_version()
  * @param string $key
  * @return null|string
  */
-function emp_get_module_setting_placeholder($key)
+function ecp_get_module_setting_placeholder($key)
 {
-    if (emp_get_string_ends_with($key, "PAGE_TITLE")) {
+    if (ecp_get_string_ends_with($key, "PAGE_TITLE")) {
         return "This name will be displayed on the checkout page";
-    } elseif (emp_get_string_ends_with($key, "USERNAME")) {
+    } elseif (ecp_get_string_ends_with($key, "USERNAME")) {
         return "Enter your Genesis Username here";
-    } elseif (emp_get_string_ends_with($key, "PASSWORD")) {
+    } elseif (ecp_get_string_ends_with($key, "PASSWORD")) {
         return "Enter your Genesis Password here";
-    } elseif (emp_get_string_ends_with($key, "TOKEN")) {
+    } elseif (ecp_get_string_ends_with($key, "TOKEN")) {
         return "Enter your Genesis Token here";
     }
 
@@ -251,7 +251,7 @@ function emp_get_module_setting_placeholder($key)
  * @param string $needle
  * @return bool
  */
-function emp_get_string_starts_with($haystack, $needle)
+function ecp_get_string_starts_with($haystack, $needle)
 {
     $length = strlen($needle);
     return (substr($haystack, 0, $length) === $needle);
@@ -263,7 +263,7 @@ function emp_get_string_starts_with($haystack, $needle)
  * @param string $needle
  * @return bool
  */
-function emp_get_string_ends_with($haystack, $needle)
+function ecp_get_string_ends_with($haystack, $needle)
 {
     $length = strlen($needle);
     if ($length == 0) {

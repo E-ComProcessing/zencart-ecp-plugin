@@ -27,20 +27,20 @@ if (!defined('IS_ADMIN_FLAG')) die('Illegal Access');
  * @param string $key
  * @return string
  */
-function emp_zfg_select_drop_down_multiple($attributes, $select_array, $key_value, $key = '')
+function ecp_zfg_select_drop_down_multiple($attributes, $select_array, $key_value, $key = '')
 {
     $name = (zen_not_null($key)
                 ? 'configuration[' . $key . '][]'
                 : 'configuration_value'
     );
     return
-        emp_zfg_draw_pull_down_menu(
+        ecp_zfg_draw_pull_down_menu(
             $name,
             $select_array,
             $key_value,
             "class=\"form-control\" multiple=\"multiple\"" .
                 (is_array($attributes)
-                    ? emp_convert_attributes_array_to_html($attributes)
+                    ? ecp_convert_attributes_array_to_html($attributes)
                     : ""
                 ),
             (is_array($attributes) && in_array('required', $attributes))
@@ -53,7 +53,7 @@ function emp_zfg_select_drop_down_multiple($attributes, $select_array, $key_valu
  * @param string $key
  * @return string
  */
-function emp_zfg_pull_down_order_statuses($order_status_id, $key = '')
+function ecp_zfg_pull_down_order_statuses($order_status_id, $key = '')
 {
     global $db;
 
@@ -69,7 +69,7 @@ function emp_zfg_pull_down_order_statuses($order_status_id, $key = '')
         $statuses->MoveNext();
     }
 
-    return emp_zfg_select_drop_down_single($statuses_array, $order_status_id, $key);
+    return ecp_zfg_select_drop_down_single($statuses_array, $order_status_id, $key);
 }
 
 /**
@@ -79,10 +79,10 @@ function emp_zfg_pull_down_order_statuses($order_status_id, $key = '')
  * @param string $key
  * @return string
  */
-function emp_zfg_select_drop_down_single($select_array, $key_value, $key = '')
+function ecp_zfg_select_drop_down_single($select_array, $key_value, $key = '')
 {
     $name = ((zen_not_null($key)) ? 'configuration[' . $key . ']' : 'configuration_value');
-    return emp_zfg_draw_pull_down_menu($name, $select_array, $key_value, "class=\"form-control\"");
+    return ecp_zfg_draw_pull_down_menu($name, $select_array, $key_value, "class=\"form-control\"");
 }
 
 /**
@@ -94,7 +94,7 @@ function emp_zfg_select_drop_down_single($select_array, $key_value, $key = '')
  * @param bool $required
  * @return string
  */
-function emp_zfg_draw_pull_down_menu($name, $values, $default = '', $parameters = '', $required = false)
+function ecp_zfg_draw_pull_down_menu($name, $values, $default = '', $parameters = '', $required = false)
 {
     $field = '<div class="form-group"><select rel="dropdown" name="' . zen_output_string($name) . '"';
 
@@ -144,7 +144,7 @@ function emp_zfg_draw_pull_down_menu($name, $values, $default = '', $parameters 
  * @param string $key
  * @return string
  */
-function emp_zfg_draw_toggle($value, $key)
+function ecp_zfg_draw_toggle($value, $key)
 {
     $name = ((zen_not_null($key)) ? 'configuration[' . $key . ']' : 'configuration_value');
     ob_start();
@@ -170,7 +170,7 @@ function emp_zfg_draw_toggle($value, $key)
  * @param string $key
  * @return string
  */
-function emp_zfg_draw_number_input($attributes, $value, $key)
+function ecp_zfg_draw_number_input($attributes, $value, $key)
 {
     if (!is_array($attributes)) {
         $attributes = array();
@@ -178,7 +178,7 @@ function emp_zfg_draw_number_input($attributes, $value, $key)
 
     $attributes['class'] = "form-number-input" . (isset($attributes['class']) ? " " . $attributes['class'] : '');
 
-    return emp_zfg_draw_input(
+    return ecp_zfg_draw_input(
         $attributes,
         $value,
         $key
@@ -192,7 +192,7 @@ function emp_zfg_draw_number_input($attributes, $value, $key)
  * @param string $key
  * @return string
  */
-function emp_zfg_draw_input($attributes, $value, $key)
+function ecp_zfg_draw_input($attributes, $value, $key)
 {
     $name = ((zen_not_null($key)) ? 'configuration[' . $key . ']' : 'configuration_value');
     $class = "form-control";
@@ -205,7 +205,7 @@ function emp_zfg_draw_input($attributes, $value, $key)
         );
     }
 
-    $attributes_html = emp_convert_attributes_array_to_html($attributes);
+    $attributes_html = ecp_convert_attributes_array_to_html($attributes);
 
     ob_start();
     ?>
@@ -214,7 +214,7 @@ function emp_zfg_draw_input($attributes, $value, $key)
             type="text" <?php echo ($attributes_html ?: '');?>
             name="<?php echo $name;?>"
             value="<?php echo $value;?>"
-            placeholder="<?php echo emp_get_module_setting_placeholder($key);?>"
+            placeholder="<?php echo ecp_get_module_setting_placeholder($key);?>"
         />
     <?php
     if (is_array($attributes) && in_array('required', $attributes)) {
@@ -234,7 +234,7 @@ function emp_zfg_draw_input($attributes, $value, $key)
  * @param string $value
  * @return string
  */
-function emp_zfg_get_toggle_value($value)
+function ecp_zfg_get_toggle_value($value)
 {
     $value = (strtolower($value) == 'true');
     ob_start();

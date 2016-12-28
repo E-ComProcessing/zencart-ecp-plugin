@@ -28,11 +28,11 @@ class OrderTransactions
      */
     private static function getResourcesHtml($data)
     {
-        $zenCartVersion = emp_get_zencart_version();
+        $zenCartVersion = ecp_get_zencart_version();
         $html = "";
 
         if (version_compare($zenCartVersion, "1.5.5", "<")) {
-            $html .= emp_add_external_resources(
+            $html .= ecp_add_external_resources(
                 array(
                     "jquery-1.12.3.min.js",
                     "bootstrap.min.js",
@@ -42,7 +42,7 @@ class OrderTransactions
             );
         }
 
-        $html .= emp_add_external_resources(
+        $html .= ecp_add_external_resources(
             array(
                 "bootstrapValidator.min.js",
                 "treegrid/treegrid.min.js",

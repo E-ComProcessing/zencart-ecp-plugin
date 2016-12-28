@@ -302,7 +302,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
     public function __construct()
     {
         $this->code = ECOMPROCESSING_CHECKOUT_CODE;
-        $this->version = "1.0.2";
+        $this->version = "1.0.4";
         parent::__construct();
     }
 

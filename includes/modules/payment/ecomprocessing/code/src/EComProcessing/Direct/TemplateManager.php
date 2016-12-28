@@ -1,4 +1,4 @@
-<?php
+I<?php
 /*
  * Copyright (C) 2016 E-ComProcessing™
  *
@@ -134,7 +134,7 @@ abstract class TemplateManager
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function() {
-                attachCardToWrapper()
+                attachCardToECPWrapper()
 
                 jQuery('<?php echo $data['formSelectors']['expiryInput'];?>').keyup(function() {
                     var ccExpiresMonthYear = jQuery(this).val().split(' / ');
@@ -147,7 +147,7 @@ abstract class TemplateManager
 
             });
 
-            function attachCardToWrapper() {
+            function attachCardToECPWrapper() {
                 var cardWrapper = jQuery('<?php echo $data['container'];?>');
 
                 if (cardWrapper.length) {
