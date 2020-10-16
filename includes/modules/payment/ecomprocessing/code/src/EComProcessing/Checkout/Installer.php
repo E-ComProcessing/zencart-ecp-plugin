@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-ComProcessing™
+ * Copyright (C) 2016 E-Comprocessing™
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,8 +12,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * @author      E-ComProcessing
- * @copyright   2016 E-ComProcessing Ltd.
+ * @author      E-Comprocessing
+ * @copyright   2016 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -45,7 +45,7 @@ class Installer extends \EComProcessing\Base\Installer
         global $db, $messageStack;
 
         if (EComProcessingCheckoutSettings::getIsInstalled()) {
-            $messageStack->add_session('E-ComProcessing Checkout module already installed.', 'error');
+            $messageStack->add_session('E-Comprocessing Checkout module already installed.', 'error');
             zen_redirect(zen_href_link(FILENAME_MODULES, 'set=payment&module=' . ECOMPROCESSING_CHECKOUT_CODE, 'NONSSL'));
             return 'failed';
         }
@@ -63,8 +63,8 @@ class Installer extends \EComProcessing\Base\Installer
         $sortOrderAttributes = "array(''maxlength'' => ''3'')";
         $requiredOptionsAttributes = "array(''required'' => ''required'')";
 
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Enable E-ComProcessing Checkout Module', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('STATUS') . "', 'true', 'Do you want to process payments via E-ComProcessing''s Genesis Gateway?', '6', '3', 'ecp_zfg_draw_toggle(', 'ecp_zfg_get_toggle_value', now())");
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Checkout Title', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('CHECKOUT_PAGE_TITLE') . "', 'Pay safely with E-ComProcessing Checkout', 'This name will be displayed on the checkout page', '6', '4', 'ecp_zfg_draw_input(null, ', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Enable E-Comprocessing Checkout Module', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('STATUS') . "', 'true', 'Do you want to process payments via E-Comprocessing''s Genesis Gateway?', '6', '3', 'ecp_zfg_draw_toggle(', 'ecp_zfg_get_toggle_value', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Checkout Title', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('CHECKOUT_PAGE_TITLE') . "', 'Pay safely with E-Comprocessing Checkout', 'This name will be displayed on the checkout page', '6', '4', 'ecp_zfg_draw_input(null, ', now())");
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Genesis API Username', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('USERNAME') . "', '', 'Enter your Username, required for accessing the Genesis Gateway', '6', '4', 'ecp_zfg_draw_input({$requiredOptionsAttributes}, ', now())");
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Genesis API Password', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('PASSWORD') . "', '', 'Enter your Password, required for accessing the Genesis Gateway', '6', '4', 'ecp_zfg_draw_input({$requiredOptionsAttributes}, ', now())");
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Live Mode', '" . EComProcessingCheckoutSettings::getCompleteSettingKey('ENVIRONMENT') . "', 'false', 'If disabled, transactions are going through our Staging (Test) server, NO MONEY ARE BEING TRANSFERRED', '6', '3', 'ecp_zfg_draw_toggle(', 'ecp_zfg_get_toggle_value', now())");

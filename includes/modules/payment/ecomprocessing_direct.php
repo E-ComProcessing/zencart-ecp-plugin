@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-ComProcessing™
+ * Copyright (C) 2016 E-Comprocessing™
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,8 +12,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * @author      E-ComProcessing
- * @copyright   2016 E-ComProcessing Ltd.
+ * @author      E-Comprocessing
+ * @copyright   2016 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -41,7 +41,7 @@ class ecomprocessing_direct extends \EComProcessing\Base\PaymentMethod
     public function __construct()
     {
         $this->code = ECOMPROCESSING_DIRECT_CODE;
-        $this->version = "1.0.5";
+        $this->version = "1.0.6";
         parent::__construct();
     }
 
