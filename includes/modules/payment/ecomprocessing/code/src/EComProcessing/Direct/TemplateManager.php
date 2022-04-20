@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,11 +13,11 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComProcessing\Direct;
+namespace EComprocessing\Direct;
 
 abstract class TemplateManager
 {
@@ -134,7 +134,7 @@ abstract class TemplateManager
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function() {
-                attachCardToECPWrapper()
+                attachCardToWrapper()
 
                 jQuery('<?php echo $data['formSelectors']['expiryInput'];?>').keyup(function() {
                     var ccExpiresMonthYear = jQuery(this).val().split(' / ');
@@ -147,7 +147,7 @@ abstract class TemplateManager
 
             });
 
-            function attachCardToECPWrapper() {
+            function attachCardToWrapper() {
                 var cardWrapper = jQuery('<?php echo $data['container'];?>');
 
                 if (cardWrapper.length) {
@@ -253,10 +253,25 @@ abstract class TemplateManager
                 margin: 0px;
             }
 
+            .jp-card .jp-card-back {
+                margin: 0px;
+            }
+
             .card-wrapper-container, .card-controls-container {
                 float: left;
                 width: 100%;
                 text-align: center;
+            }
+
+            .jp-card .jp-card-front .jp-card-lower {
+                width: 100%;
+                left: 0;
+            }
+
+            .jp-card-number.jp-card-valid,
+            .jp-card-number.jp-card-invalid
+            {
+                margin-left: -15%;
             }
         </style>
     <?php

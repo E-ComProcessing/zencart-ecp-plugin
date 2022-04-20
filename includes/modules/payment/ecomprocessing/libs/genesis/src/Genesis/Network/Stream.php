@@ -28,7 +28,7 @@ namespace Genesis\Network;
  * @package    Genesis
  * @subpackage Network
  */
-class Stream implements \Genesis\Interfaces\Network
+class Stream extends Base
 {
     /**
      * Keep per-request data as other methods need it
@@ -42,22 +42,6 @@ class Stream implements \Genesis\Interfaces\Network
     private $streamContext;
 
     /**
-     * Storing the full incoming response
-     * @var string
-     */
-    private $response;
-    /**
-     * Storing body from an incoming response
-     * @var string
-     */
-    private $responseBody;
-    /**
-     * Storing headers from an incoming response
-     * @var string
-     */
-    private $responseHeaders;
-
-    /**
      * Get HTTP Status Code from an incoming response
      *
      * @return mixed
@@ -68,65 +52,36 @@ class Stream implements \Genesis\Interfaces\Network
     }
 
     /**
-     * Get Body/Headers from an incoming response
-     *
-     * @return mixed
-     */
-    public function getResponse()
-    {
-        return $this->response;
-    }
-
-    /**
-     * Get Headers from an incoming response
-     *
-     * @return mixed
-     */
-    public function getResponseHeaders()
-    {
-        return $this->responseHeaders;
-    }
-
-    /**
-     * Get Body from an incoming response
-     *
-     * @return mixed
-     */
-    public function getResponseBody()
-    {
-        return $this->responseBody;
-    }
-
-    /**
      * Set Stream parameters: url, data, auth etc.
      *
      * @param array $requestData
      *
      * @return void
+     * @throws \Genesis\Exceptions\InvalidArgument
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function prepareRequestBody($requestData)
     {
         $url = parse_url($requestData['url']);
 
-        $headers = array(
-            'Content-Type: text/xml',
+        $headers = [
+            'Content-Type: ' . $this->getRequestContentType($requestData['format']),
             sprintf('Authorization: Basic %s', base64_encode($requestData['user_login'])),
             sprintf('Content-Length: %s', strlen($requestData['body'])),
             sprintf('User-Agent: %s', $requestData['user_agent']),
-        );
+        ];
 
-        $contextOptions = array(
-            'http' => array(
+        $contextOptions = [
+            'http' => [
                 'method'  => $requestData['type'],
                 'header'  => implode("\r\n", $headers),
                 'content' => $requestData['body'],
                 'timeout' => $requestData['timeout']
-            ),
-            'ssl'  => array(
+            ],
+            'ssl'  => [
                 // DO NOT allow self-signed certificates
                 'allow_self_signed' => false,
-                // Path to certificate/s PEM files used to validate the server authenticity
-                'cafile'            => $requestData['ca_bundle'],
                 // Validate Certificates
                 'verify_peer'       => true,
                 // Abort if the certificate-chain is longer than 5 nodes
@@ -137,8 +92,8 @@ class Stream implements \Genesis\Interfaces\Network
                 'SNI_enabled'       => true,
                 // You can tweak the accepted Cipher list (if needed)
                 'ciphers'           => implode(':', self::getCiphers())
-            )
-        );
+            ]
+        ];
 
         // Note: Mitigate CRIME/BEAST attacks
         if (\Genesis\Utils\Common::compareVersions('5.4.13', '>=')) {
@@ -166,15 +121,15 @@ class Stream implements \Genesis\Interfaces\Network
      */
     public function execute()
     {
-        set_error_handler(array($this, 'processErrors'), E_WARNING);
+        set_error_handler([$this, 'processErrors'], E_WARNING);
 
         $stream = fopen($this->requestData['url'], 'r', false, $this->streamContext);
 
         $this->responseBody = stream_get_contents($stream);
 
-        $this->responseHeaders = $http_response_header;
+        $this->responseHeaders = implode("\r\n", $http_response_header);
 
-        $this->response = implode("\r\n", $http_response_header) . "\r\n\r\n" . $this->responseBody;
+        $this->response = $this->responseHeaders . "\r\n\r\n" . $this->responseBody;
 
         restore_error_handler();
     }
@@ -203,7 +158,7 @@ class Stream implements \Genesis\Interfaces\Network
      */
     public static function getCiphers()
     {
-        return array(
+        return [
             'ECDHE-RSA-AES128-GCM-SHA256',
             'ECDHE-ECDSA-AES128-GCM-SHA256',
             'ECDHE-RSA-AES256-GCM-SHA384',
@@ -235,6 +190,6 @@ class Stream implements \Genesis\Interfaces\Network
             '!PSK',
             '!SSLv2',
             '!SSLv3'
-        );
+        ];
     }
 }

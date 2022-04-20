@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -53,22 +53,22 @@ if (ecp_get_is_payment_module_edit_action()) {
     );
     ?>
     <script type="text/javascript">
-        var $emp = $.noConflict();
+        var $ecp = $.noConflict();
 
-        $emp(document).ready(function() {
-            $emp('input.bootstrap-checkbox').checkboxpicker({
+        $ecp(document).ready(function() {
+            $ecp('input.bootstrap-checkbox').checkboxpicker({
                 html: true,
                 offLabel: '<span class="glyphicon glyphicon-remove">',
                 onLabel: '<span class="glyphicon glyphicon-ok">',
                 style: 'btn-group-ms'
             });
 
-            $emp('input.bootstrap-checkbox').change(function() {
-                var isChecked = $emp(this).prop('checked');
-                $emp(this).parent().find('input[type="hidden"]').val(isChecked);
+            $ecp('input.bootstrap-checkbox').change(function() {
+                var isChecked = $ecp(this).prop('checked');
+                $ecp(this).parent().find('input[type="hidden"]').val(isChecked);
             });
 
-            $emp('input.form-number-input').number(true, 0, '', '');
+            $ecp('input.form-number-input').number(true, 0, '', '');
         });
 
     </script>

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -23,10 +23,36 @@ if (!defined('IS_ADMIN_FLAG')) {
 
 define('ECOMPROCESSING_CHECKOUT_CODE', 'ecomprocessing_checkout');
 define('FILENAME_EMECHANTPAY_CHECKOUT_IPN', 'ecomprocessing_checkout_ipn');
-define('ECOMPROCESSING_CHECKOUT_SETTINGS_PREFIX', 'MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_');
-define('TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS', DB_PREFIX . 'ecomprocessing_checkout_transactions');
+define(
+    'ECOMPROCESSING_CHECKOUT_SETTINGS_PREFIX',
+    'MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_'
+);
+define(
+    'TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS',
+    DB_PREFIX . 'ecomprocessing_checkout_transactions'
+);
+define(
+    'TABLE_ECOMPROCESSING_CHECKOUT_CONSUMERS',
+    DB_PREFIX . 'ecomprocessing_checkout_consumers'
+);
 
 define('ECOMPROCESSING_DIRECT_CODE', 'ecomprocessing_direct');
 define('FILENAME_EMECHANTPAY_DIRECT_IPN', 'ecomprocessing_direct_ipn');
 define('ECOMPROCESSING_DIRECT_SETTINGS_PREFIX', 'MODULE_PAYMENT_ECOMPROCESSING_DIRECT_');
-define('TABLE_ECOMPROCESSING_DIRECT_TRANSACTIONS', DB_PREFIX . 'ecomprocessing_direct_transactions');
+define(
+    'TABLE_ECOMPROCESSING_DIRECT_TRANSACTIONS',
+    DB_PREFIX . 'ecomprocessing_direct_transactions'
+);
+define('PPRO_TRANSACTION_SUFFIX', '_ppro');
+define('GOOGLE_PAY_TRANSACTION_PREFIX', 'google_pay_');
+define('GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE', 'authorize');
+define('GOOGLE_PAY_PAYMENT_TYPE_SALE', 'sale');
+define('PAYPAL_TRANSACTION_PREFIX', 'pay_pal_');
+define('PAYPAL_PAYMENT_TYPE_AUTHORIZE', 'authorize');
+define('PAYPAL_PAYMENT_TYPE_SALE', 'sale');
+define('PAYPAL_PAYMENT_TYPE_EXPRESS', 'express');
+define('APPLE_PAY_TRANSACTION_PREFIX', 'apple_pay_');
+define('APPLE_PAY_PAYMENT_TYPE_AUTHORIZE', 'authorize');
+define('APPLE_PAY_PAYMENT_TYPE_SALE', 'sale');
+define('METHOD_ACTION_CAPTURE', 'capture');
+define('METHOD_ACTION_REFUND', 'refund');

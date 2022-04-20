@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,14 +13,19 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComProcessing\Base;
+namespace EComprocessing\Base;
+
+use EComprocessing\Helpers\TransactionsHelper;
+use Genesis\API\Constants\Transaction\Types;
 
 class TransactionProcess
 {
+
+    const TRANSACTION_USAGE = 'Payment via';
 
     /**
      * Set Genesis Config Values (Ex. Login, Password, Token, etc)
@@ -78,34 +83,57 @@ class TransactionProcess
 
     /**
      * Execute Genesis Reference Transaction (Capture, Refund, Void)
-     * @param string $transaction_type
-     * @param \stdClass $data
+     *
+     * @param string    $transaction_class Transaction Library
+     * @param \stdClass $data              Transaction Data
+     *
+     * @SuppressWarnings(PHPMD)
+     *
      * @return \stdClass
      * @throws \Exception
      */
-    private static function executeReferenceTransaction($transaction_type, $data)
+    private static function _executeReferenceTransaction($transaction_class, $data)
     {
+        global $order;
+
         try {
             static::bootstrap();
 
             static::setTerminalToken($data->reference_id);
 
-            $genesis = new \Genesis\Genesis('Financial\\' . ucfirst($transaction_type));
+            $genesis = new \Genesis\Genesis($transaction_class);
 
             $genesis
                 ->request()
-                    ->setTransactionId(
-                        static::genTransactionId('zencart-')
-                    )
-                    ->setRemoteIp($data->remote_address)
-                    ->setUsage($data->usage)
-                    ->setReferenceId($data->reference_id);
+                ->setTransactionId(
+                    static::genTransactionId('zencart-')
+                )
+                ->setRemoteIp($data->remote_address)
+                ->setUsage($data->usage)
+                ->setReferenceId($data->reference_id);
 
-            if ($transaction_type != \Genesis\API\Constants\Transaction\Types::VOID) {
+            // @codingStandardsIgnoreStart
+            if ($transaction_class != Types::getFinancialRequestClassForTrxType(Types::VOID)) {
+            // @codingStandardsIgnoreEnd
                 $genesis
                     ->request()
-                        ->setAmount($data->amount)
-                        ->setCurrency($data->currency);
+                    ->setAmount($data->amount)
+                    ->setCurrency($data->currency);
+            }
+
+            $klarnaCapture = Types::getCaptureTransactionClass(
+                Types::KLARNA_AUTHORIZE
+            );
+            $klarnaRefund  = Types::getRefundTransactionClass(Types::KLARNA_CAPTURE);
+
+            if ($transaction_class === $klarnaCapture
+                || $transaction_class === $klarnaRefund
+            ) {
+                $items = TransactionsHelper::getKlarnaCustomParamItems($order);
+
+                $genesis
+                    ->request()
+                    ->setItems($items);
             }
 
             $genesis->execute();
@@ -119,19 +147,15 @@ class TransactionProcess
     /**
      * Send Capture transaction to the Gateway
      *
-     * @param string $reference_id ReferenceId
-     * @param string $amount Amount to be refunded
-     * @param string $currency Currency for the refunded amount
-     * @param string $usage Usage (optional text)
-     * @param string $token Terminal token of the initial transaction
+     * @param \stdClass $data Transaction data
      *
      * @return object
+     * @throws \Exception
      */
-
     public static function capture($data)
     {
-        return static::executeReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::CAPTURE,
+        return static::_executeReferenceTransaction(
+            Types::getCaptureTransactionClass($data->type),
             $data
         );
     }
@@ -139,18 +163,15 @@ class TransactionProcess
     /**
      * Send Refund transaction to the Gateway
      *
-     * @param string $reference_id ReferenceId
-     * @param string $amount Amount to be refunded
-     * @param string $currency Currency for the refunded amount
-     * @param string $usage Usage (optional text)
-     * @param string $token Terminal token of the initial transaction
+     * @param \stdClass $data Transaction data
      *
      * @return object
+     * @throws \Exception
      */
     public static function refund($data)
     {
-        return static::executeReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::REFUND,
+        return static::_executeReferenceTransaction(
+            Types::getRefundTransactionClass($data->type),
             $data
         );
     }
@@ -158,16 +179,15 @@ class TransactionProcess
     /**
      * Send Void transaction to the Gateway
      *
-     * @param string $reference_id ReferenceId
-     * @param string $usage Usage (optional text)
-     * @param string $token Terminal token of the initial transaction
+     * @param \stdClass $data Transaction data
      *
      * @return object
+     * @throws \Exception
      */
     public static function void($data)
     {
-        return self::executeReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::VOID,
+        return self::_executeReferenceTransaction(
+            Types::getFinancialRequestClassForTrxType(Types::VOID),
             $data
         );
     }
@@ -199,5 +219,15 @@ class TransactionProcess
         }
 
         return $state;
+    }
+
+    /**
+     * Return usage of transaction
+     *
+     * @return string
+     */
+    protected static function getUsage()
+    {
+        return self::TRANSACTION_USAGE . ' ' . STORE_NAME;
     }
 }

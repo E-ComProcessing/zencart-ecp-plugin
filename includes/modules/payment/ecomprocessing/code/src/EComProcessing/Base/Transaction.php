@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,11 +13,14 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComProcessing\Base;
+namespace EComprocessing\Base;
+
+use Genesis\API\Constants\Transaction\States as GenesisTransactionState;
+use Genesis\API\Constants\Transaction\Types;
 
 class Transaction
 {
@@ -293,13 +296,19 @@ class Transaction
      */
     public static function getCanCaptureTransaction($transaction)
     {
-        return (in_array($transaction['type'], array(
-                    \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
-                    \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D
-                )) &&
-                ($transaction['status'] ==
-                    \Genesis\API\Constants\Transaction\States::APPROVED)
-        );
+        if (!self::isApprovedStatus($transaction['status'])) {
+            return false;
+        }
+
+        if (self::isTransactionWithCustomAttr($transaction['type'])) {
+            return self::isCustomAttributeBasedTransactionSelected(
+                METHOD_ACTION_CAPTURE,
+                $transaction['type'],
+                \EComprocessing\Checkout\Settings::getTransactionTypes()
+            );
+        }
+
+        return Types::canCapture($transaction['type']);
     }
 
     /**
@@ -309,38 +318,150 @@ class Transaction
      */
     public static function getCanRefundTransaction($transaction)
     {
-        return (in_array($transaction['type'], array(
-                    \Genesis\API\Constants\Transaction\Types::CAPTURE,
-                    \Genesis\API\Constants\Transaction\Types::SALE,
-                    \Genesis\API\Constants\Transaction\Types::SALE_3D,
-                    \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE,
-                    \Genesis\API\Constants\Transaction\Types::RECURRING_SALE
-                )) &&
-                ($transaction['status'] ==
-                    \Genesis\API\Constants\Transaction\States::APPROVED)
-        );
+        if (!self::isApprovedStatus($transaction['status'])) {
+            return false;
+        }
+
+        if (self::isTransactionWithCustomAttr($transaction['type'])) {
+            return self::isCustomAttributeBasedTransactionSelected(
+                METHOD_ACTION_REFUND,
+                $transaction['type'],
+                \EComprocessing\Checkout\Settings::getTransactionTypes()
+            );
+        }
+
+        return Types::canRefund($transaction['type']);
     }
 
     /**
      * Determine if transaction can be voided
+     *
      * @param array $transaction
+     *
      * @return bool
      */
     public static function getCanVoidTransaction($transaction)
     {
-        return (
-            $transaction['status'] == \Genesis\API\Constants\Transaction\States::APPROVED &&
-            in_array($transaction['type'], array(
-                \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
-                \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D,
-                \Genesis\API\Constants\Transaction\Types::CAPTURE,
-                \Genesis\API\Constants\Transaction\Types::SALE,
-                \Genesis\API\Constants\Transaction\Types::SALE_3D,
-                \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE,
-                \Genesis\API\Constants\Transaction\Types::RECURRING_SALE,
-                \Genesis\API\Constants\Transaction\Types::REFUND
-            ))
+        return (Types::canVoid($transaction['type']) &&
+            self::isApprovedStatus($transaction['status']));
+    }
+
+    /**
+     * Check if the specific transaction types by custom attribute exists
+     *
+     * @param string $transactionType Genesis Transaction Type
+     *
+     * @return boolean
+     */
+    public static function isTransactionWithCustomAttr($transactionType)
+    {
+        $transactionTypes = array(
+            Types::GOOGLE_PAY,
+            Types::PAY_PAL,
+            Types::APPLE_PAY,
         );
+
+        return in_array($transactionType, $transactionTypes, true);
+    }
+
+    /**
+     * Check specific transaction based on the selected custom attribute
+     *
+     * @param string $action          Reference Action
+     * @param string $transactionType Genesis Transaction Type
+     * @param array  $selectedTypes   Selected transaction types into the config
+     *
+     * @return boolean
+     */
+    public static function isCustomAttributeBasedTransactionSelected(
+        $action,
+        $transactionType,
+        $selectedTypes
+    ) {
+        switch ($transactionType) {
+        case Types::GOOGLE_PAY:
+            if (METHOD_ACTION_CAPTURE === $action) {
+                return in_array(
+                    GOOGLE_PAY_TRANSACTION_PREFIX .
+                    GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE,
+                    $selectedTypes,
+                    true
+                );
+            }
+
+            if (METHOD_ACTION_REFUND === $action) {
+                return in_array(
+                    GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_SALE,
+                    $selectedTypes,
+                    true
+                );
+            }
+            break;
+        case Types::PAY_PAL:
+            if (METHOD_ACTION_CAPTURE === $action) {
+                return in_array(
+                    PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_AUTHORIZE,
+                    $selectedTypes,
+                    true
+                );
+            }
+
+            if (METHOD_ACTION_REFUND === $action) {
+                $refundableTypes = [
+                    PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_SALE,
+                    PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_EXPRESS,
+                ];
+
+                return (
+                    count(
+                        array_intersect(
+                            $refundableTypes,
+                            $selectedTypes
+                        )
+                    ) > 0
+                );
+            }
+            break;
+        case Types::APPLE_PAY:
+            if (METHOD_ACTION_CAPTURE === $action) {
+                return in_array(
+                    APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_AUTHORIZE,
+                    $selectedTypes,
+                    true
+                );
+            }
+
+            if (METHOD_ACTION_REFUND === $action) {
+                return in_array(
+                    APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_SALE,
+                    $selectedTypes,
+                    true
+                );
+            }
+            break;
+        default:
+            return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the given status is APPROVED
+     *
+     * @param string $status Transaction Status
+     *
+     * @return bool
+     */
+    public static function isApprovedStatus($status)
+    {
+        if (empty($status)) {
+            return false;
+        }
+
+        $statusObject = new GenesisTransactionState($status);
+
+        return $statusObject->isApproved();
     }
 
     /**

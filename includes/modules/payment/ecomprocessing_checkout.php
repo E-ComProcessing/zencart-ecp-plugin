@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,19 +13,19 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
 require DIR_FS_CATALOG . DIR_WS_INCLUDES . "modules/payment/ecomprocessing/code/vendor/autoload.php";
 
-use \EComProcessing\Checkout\Installer          as EComProcessingCheckoutInstaller;
-use \EComProcessing\Checkout\Settings           as EComProcessingCheckoutSettings;
-use \EComProcessing\Checkout\Transaction        as EComProcessingCheckoutTransaction;
-use \EComProcessing\Checkout\TransactionProcess as EComProcessingCheckoutTransactionProcess;
-use \EComProcessing\Checkout\Notification       as EComProcessingCheckoutNotification;
+use \EComprocessing\Checkout\Installer          as EComprocessingCheckoutInstaller;
+use \EComprocessing\Checkout\Settings           as EComprocessingCheckoutSettings;
+use \EComprocessing\Checkout\Transaction        as EComprocessingCheckoutTransaction;
+use \EComprocessing\Checkout\TransactionProcess as EComprocessingCheckoutTransactionProcess;
+use \EComprocessing\Checkout\Notification       as EComprocessingCheckoutNotification;
 
-class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
+class EComprocessing_checkout extends \EComprocessing\Base\PaymentMethod
 {
 
     /**
@@ -36,7 +36,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     protected function getReferenceTransactionResponse($transaction_type, $data)
     {
-        return EComProcessingCheckoutTransactionProcess::$transaction_type($data);
+        return EComprocessingCheckoutTransactionProcess::$transaction_type($data);
     }
 
     /**
@@ -47,7 +47,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
     {
         $data->params['modal'] = array(
             'capture' => array(
-                'allowed' => EComProcessingCheckoutSettings::getIsPartialCaptureAllowed(),
+                'allowed' => EComprocessingCheckoutSettings::getIsPartialCaptureAllowed(),
                 'form' => array(
                     'action' => 'doCapture',
                 ),
@@ -56,7 +56,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
                 )
             ),
             'refund' => array(
-                'allowed' => EComProcessingCheckoutSettings::getIsPartialRefundAllowed(),
+                'allowed' => EComprocessingCheckoutSettings::getIsPartialRefundAllowed(),
                 'form' => array(
                     'action' => 'doRefund',
                 ),
@@ -65,7 +65,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
                 )
             ),
             'void' => array(
-                'allowed' => EComProcessingCheckoutSettings::getIsVoidTransactionAllowed(),
+                'allowed' => EComprocessingCheckoutSettings::getIsVoidTransactionAllowed(),
                 'form' => array(
                     'action' => 'doVoid',
                 ),
@@ -175,7 +175,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     protected function doPopulateTransaction($data)
     {
-        EComProcessingCheckoutTransaction::populateTransaction($data);
+        EComprocessingCheckoutTransaction::populateTransaction($data);
     }
 
     /**
@@ -188,26 +188,26 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
         switch ($data['transaction_type']) {
             case \Genesis\API\Constants\Transaction\Types::CAPTURE:
                 $data['type'] = 'Captured';
-                $data['order_status_id'] = EComProcessingCheckoutSettings::getProcessedOrderStatusID();
+                $data['order_status_id'] = EComprocessingCheckoutSettings::getProcessedOrderStatusID();
                 break;
 
             case \Genesis\API\Constants\Transaction\Types::REFUND:
                 $data['type'] = 'Refunded';
-                $data['order_status_id'] = EComProcessingCheckoutSettings::getRefundedOrderStatusID();
+                $data['order_status_id'] = EComprocessingCheckoutSettings::getRefundedOrderStatusID();
                 break;
 
             case \Genesis\API\Constants\Transaction\Types::VOID:
                 $data['type'] = 'Voided';
-                $data['order_status_id'] = EComProcessingCheckoutSettings::getCanceledOrderStatusID();
+                $data['order_status_id'] = EComprocessingCheckoutSettings::getCanceledOrderStatusID();
                 break;
         }
 
         if (isset($data['type']) && isset($data['order_status_id'])) {
-            EComProcessingCheckoutTransaction::setOrderStatus(
+            EComprocessingCheckoutTransaction::setOrderStatus(
                 $data['orders_id'],
                 $data['order_status_id']
             );
-            EComProcessingCheckoutTransaction::performOrderStatusHistory($data);
+            EComprocessingCheckoutTransaction::performOrderStatusHistory($data);
         }
     }
 
@@ -230,7 +230,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     protected function getTransactionsSumAmount($order_id, $reference_id, $types, $status)
     {
-        return EComProcessingCheckoutTransaction::getTransactionsSumAmount(
+        return EComprocessingCheckoutTransaction::getTransactionsSumAmount(
             $order_id,
             $reference_id,
             $types,
@@ -247,7 +247,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     protected function getTransactionById($unique_id)
     {
-        return EComProcessingCheckoutTransaction::getTransactionById($unique_id);
+        return EComprocessingCheckoutTransaction::getTransactionById($unique_id);
     }
 
     /**
@@ -260,7 +260,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     protected function getTransactionsByTypeAndStatus($order_id, $reference_id, $transaction_types, $status)
     {
-        return EComProcessingCheckoutTransaction::getTransactionsByTypeAndStatus(
+        return EComprocessingCheckoutTransaction::getTransactionsByTypeAndStatus(
             $order_id,
             $reference_id,
             $transaction_types,
@@ -281,7 +281,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
                 $db->Execute(
                     "select configuration_value from " . TABLE_CONFIGURATION . "
                      where configuration_key = '" .
-                        EComProcessingCheckoutSettings::getCompleteSettingKey("STATUS") . "'"
+                        EComprocessingCheckoutSettings::getCompleteSettingKey("STATUS") . "'"
                 );
             $this->_check = $check_query->RecordCount();
         }
@@ -293,7 +293,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     protected function registerLibraries()
     {
-        EComProcessingCheckoutTransactionProcess::bootstrap();
+        EComprocessingCheckoutTransactionProcess::bootstrap();
     }
 
     /**
@@ -302,23 +302,23 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
     public function __construct()
     {
         $this->code = ECOMPROCESSING_CHECKOUT_CODE;
-        $this->version = "1.0.6";
+        $this->version = "1.1.8";
         parent::__construct();
     }
 
     protected function init()
     {
-        $this->enabled = EComProcessingCheckoutSettings::getStatus();
+        $this->enabled = EComprocessingCheckoutSettings::getStatus();
         if (IS_ADMIN_FLAG === true) {
             // Payment module title in Admin
             $this->title = MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_TEXT_TITLE;
 
-            if (EComProcessingCheckoutSettings::getIsInstalled()) {
-                if (!EComProcessingCheckoutSettings::getIsConfigured()) {
+            if (EComprocessingCheckoutSettings::getIsInstalled()) {
+                if (!EComprocessingCheckoutSettings::getIsConfigured()) {
                     $this->title .= '<span class="alert"> (Not Configured)</span>';
-                } elseif (!EComProcessingCheckoutSettings::getStatus()) {
+                } elseif (!EComprocessingCheckoutSettings::getStatus()) {
                     $this->title .= '<span class="alert"> (Disabled)</span>';
-                } elseif (!EComProcessingCheckoutSettings::getIsLiveMode()) {
+                } elseif (!EComprocessingCheckoutSettings::getIsLiveMode()) {
                     $this->title .= '<span class="alert-warning"> (Staging Mode)</span>';
                 } else {
                     $this->title .= '<span class="alert-success"> (Live Mode)</span>';
@@ -337,10 +337,10 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
             ) .
             MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_TEXT_DESCRIPTION;
         // Sort Order of this payment option on the customer payment page
-        $this->sort_order = EComProcessingCheckoutSettings::getSortOrder();
+        $this->sort_order = EComprocessingCheckoutSettings::getSortOrder();
         $this->order_status = (int)DEFAULT_ORDERS_STATUS_ID;
-        if (EComProcessingCheckoutSettings::getOrderStatusID() > 0) {
-            $this->order_status = EComProcessingCheckoutSettings::getOrderStatusID();
+        if (EComprocessingCheckoutSettings::getOrderStatusID() > 0) {
+            $this->order_status = EComprocessingCheckoutSettings::getOrderStatusID();
         }
 
         parent::init();
@@ -352,7 +352,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     public function update_status()
     {
-        $this->enabled = EComProcessingCheckoutSettings::getIsAvailableOnCheckoutPage();
+        $this->enabled = EComprocessingCheckoutSettings::getIsAvailableOnCheckoutPage();
     }
 
     /**
@@ -365,7 +365,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
         $selection = array(
             'id' => $this->code,
             'module' =>
-                EComProcessingCheckoutSettings::getCheckoutPageTitle(
+                EComprocessingCheckoutSettings::getCheckoutPageTitle(
                     MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_TEXT_TITLE
                 ) .
                 MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_TEXT_PUBLIC_CHECKOUT_CONTAINER
@@ -386,8 +386,9 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
     {
         global $order, $messageStack;
 
+        $prefix = self::PLATFORM_TRANSACTION_PREFIX;
         $data = new stdClass();
-        $data->transaction_id = md5(uniqid() . microtime(true));
+        $data->transaction_id = self::generateTransactionId($prefix);
         $data->description = '';
 
         foreach ($order->products as $product) {
@@ -398,22 +399,22 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
 
         $data->currency = $order->info['currency'];
 
-        $data->language_id = EComProcessingCheckoutSettings::getLanguage();
+        $data->language_id = EComprocessingCheckoutSettings::getLanguage();
 
         $data->urls = array(
             'notification'   =>
-                EComProcessingCheckoutNotification::buildNotificationUrl(),
+                EComprocessingCheckoutNotification::buildNotificationUrl(),
             'return_success' =>
-                EComProcessingCheckoutNotification::buildReturnURL(
-                    EComProcessingCheckoutNotification::ACTION_SUCCESS
+                EComprocessingCheckoutNotification::buildReturnURL(
+                    EComprocessingCheckoutNotification::ACTION_SUCCESS
                 ),
             'return_failure' =>
-                EComProcessingCheckoutNotification::buildReturnURL(
-                    EComProcessingCheckoutNotification::ACTION_FAILURE
+                EComprocessingCheckoutNotification::buildReturnURL(
+                    EComprocessingCheckoutNotification::ACTION_FAILURE
                 ),
             'return_cancel' =>
-                EComProcessingCheckoutNotification::buildReturnURL(
-                    EComProcessingCheckoutNotification::ACTION_CANCEL
+                EComprocessingCheckoutNotification::buildReturnURL(
+                    EComprocessingCheckoutNotification::ACTION_CANCEL
                 )
         );
 
@@ -422,7 +423,15 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
         $errorMessage = null;
 
         try {
-            $this->responseObject = EComProcessingCheckoutTransactionProcess::pay($data);
+            $this->responseObject = EComprocessingCheckoutTransactionProcess::pay(
+                $data
+            );
+
+            if (isset($this->responseObject->consumer_id)) {
+                EComprocessingCheckoutTransactionProcess::saveConsumerId(
+                    $this->responseObject->consumer_id
+                );
+            }
 
             return true;
         } catch (\Genesis\Exceptions\ErrorAPI $api) {
@@ -457,7 +466,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     public function admin_notification($zf_order_id)
     {
-        if (EComProcessingCheckoutSettings::getIsInstalled()) {
+        if (EComprocessingCheckoutSettings::getIsInstalled()) {
             return parent::admin_notification($zf_order_id);
         } else {
             return false;
@@ -470,7 +479,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     public function install()
     {
-        EComProcessingCheckoutInstaller::installModule();
+        EComprocessingCheckoutInstaller::installModule();
     }
 
     /**
@@ -479,7 +488,7 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     public function remove()
     {
-        EComProcessingCheckoutInstaller::removeModule();
+        EComprocessingCheckoutInstaller::removeModule();
     }
     /**
      * Internal list of configuration keys used for configuration of the module
@@ -488,6 +497,6 @@ class ecomprocessing_checkout extends \EComProcessing\Base\PaymentMethod
      */
     public function keys()
     {
-        return EComProcessingCheckoutSettings::getSettingKeys();
+        return EComprocessingCheckoutSettings::getSettingKeys();
     }
 }

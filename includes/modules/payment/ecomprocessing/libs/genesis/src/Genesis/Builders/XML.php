@@ -39,6 +39,13 @@ final class XML implements \Genesis\Interfaces\Builder
     public $context;
 
     /**
+     * Store the Generated Document
+     *
+     * @var string
+     */
+    private $output;
+
+    /**
      * Set and instantiate new UTF-8 XML document
      */
     public function __construct()
@@ -52,20 +59,10 @@ final class XML implements \Genesis\Interfaces\Builder
     }
 
     /**
-     * Flush and destroy XMLWriter instance upon destruction
-     */
-    public function __destruct()
-    {
-        if (isset($this->context)) {
-            $this->context->flush();
-        }
-    }
-
-    /**
      * Insert tree-structured array as nodes in XMLWriter
      * and end the current Document.
      *
-     * @param $data Array - tree-structured array
+     * @param array $data - tree-structured array
      *
      * @throws \Genesis\Exceptions\InvalidArgument
      *
@@ -84,6 +81,8 @@ final class XML implements \Genesis\Interfaces\Builder
 
         // Finish the document
         $this->context->endDocument();
+
+        $this->output = $this->context->outputMemory(true);
     }
 
     /**
@@ -93,7 +92,7 @@ final class XML implements \Genesis\Interfaces\Builder
      */
     public function getOutput()
     {
-        return $this->context->outputMemory(false);
+        return $this->output;
     }
 
     /**
@@ -158,6 +157,8 @@ final class XML implements \Genesis\Interfaces\Builder
      * Write Element's CData
      *
      * @param $value
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function writeCData($value)
     {
@@ -174,6 +175,8 @@ final class XML implements \Genesis\Interfaces\Builder
      * Write Element's Text
      *
      * @param $value
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function writeText($value)
     {
@@ -191,6 +194,8 @@ final class XML implements \Genesis\Interfaces\Builder
      *
      * @param $key
      * @param $value
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function writeElement($key, $value)
     {

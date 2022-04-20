@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,18 +13,18 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-if (!class_exists('EComProcessing\Direct\TemplateManager')) {
+if (!class_exists('EComprocessing\Direct\TemplateManager')) {
     return;
 }
 
-if (\EComProcessing\Direct\Settings::getIsAvailableOnCheckoutPage() &&
-    \EComProcessing\Direct\Settings::getShouldUseIntegratedPaymentTemplate()
+if (\EComprocessing\Direct\Settings::getIsAvailableOnCheckoutPage() &&
+    \EComprocessing\Direct\Settings::getShouldUseIntegratedPaymentTemplate()
 ) {
-    echo \EComProcessing\Direct\TemplateManager::getCardJSContent(
+    echo \EComprocessing\Direct\TemplateManager::getCardJSContent(
         array(
             'form' => 'form[name="checkout_payment"]',
             'container' => '#payment-method-ecomprocessing-direct .card-wrapper',
@@ -41,5 +41,5 @@ if (\EComProcessing\Direct\Settings::getIsAvailableOnCheckoutPage() &&
         )
     );
 
-    echo \EComProcessing\Direct\TemplateManager::getCardStyleContent();
+    echo \EComprocessing\Direct\TemplateManager::getCardStyleContent();
 }

@@ -20,119 +20,42 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
+
 namespace Genesis\API\Request\Financial\Cards;
 
+use Genesis\API\Traits\Request\Financial\SourceOfFundsAttributes;
+use Genesis\API\Traits\RestrictedSetter;
+
 /**
+ * Class Credit
+ *
  * Credit Request
  *
- * @package    Genesis
- * @subpackage Request
+ * @package Genesis\API\Request\Financial\Cards
  */
-class Credit extends \Genesis\API\Request
+class Credit extends \Genesis\API\Request\Base\Financial\Reference
 {
-    /**
-     * Unique transaction id defined by merchant
-     *
-     * @var string
-     */
-    protected $transaction_id;
+    use RestrictedSetter, SourceOfFundsAttributes;
 
     /**
-     * Description of the transaction for later use
-     *
-     * @var string
+     * Returns the Request transaction type
+     * @return string
      */
-    protected $usage;
-
-    /**
-     * IPv4 address of customer
-     *
-     * @var string
-     */
-    protected $remote_ip;
-
-    /**
-     * Amount of transaction in minor currency unit
-     *
-     * @var int|float|double
-     */
-    protected $amount;
-
-    /**
-     * Currency code in ISO-4217
-     *
-     * @var string
-     */
-    protected $currency;
-
-    /**
-     * Unique id of the existing (target) transaction
-     *
-     * @var string
-     */
-    protected $reference_id;
-
-    /**
-     * Set the per-request configuration
-     *
-     * @return void
-     */
-    protected function initConfiguration()
+    protected function getTransactionType()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(
-            array(
-                'protocol' => 'https',
-                'port'     => 443,
-                'type'     => 'POST',
-                'format'   => 'xml',
-            )
-        );
-
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
+        return \Genesis\API\Constants\Transaction\Types::CREDIT;
     }
 
     /**
-     * Set the required fields
+     * Return additional request attributes
      *
-     * @return void
+     * @return array
      */
-    protected function setRequiredFields()
+    protected function getPaymentTransactionStructure()
     {
-        $requiredFields = array(
-            'transaction_id',
-            'reference_id',
-            'amount',
-            'currency'
+        return array_merge(
+            parent::getPaymentTransactionStructure(),
+            $this->getSourceOfFundsStructure()
         );
-
-        $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
-    }
-
-    /**
-     * Create the request's Tree structure
-     *
-     * @return void
-     */
-    protected function populateStructure()
-    {
-        $treeStructure = array(
-            'payment_transaction' => array(
-                'transaction_type' => \Genesis\API\Constants\Transaction\Types::CREDIT,
-                'transaction_id'   => $this->transaction_id,
-                'usage'            => $this->usage,
-                'remote_ip'        => $this->remote_ip,
-                'reference_id'     => $this->reference_id,
-                'amount'           => $this->transform(
-                    'amount',
-                    array(
-                        $this->amount,
-                        $this->currency,
-                    )
-                ),
-                'currency'         => $this->currency
-            )
-        );
-
-        $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
     }
 }

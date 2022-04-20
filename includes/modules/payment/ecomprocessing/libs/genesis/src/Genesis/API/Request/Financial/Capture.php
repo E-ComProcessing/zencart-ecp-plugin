@@ -22,117 +22,41 @@
  */
 namespace Genesis\API\Request\Financial;
 
+use Genesis\API\Traits\Request\Financial\TravelData\TravelDataAttributes;
+use Genesis\API\Traits\Request\Financial\Business\BusinessAttributes;
+use Genesis\API\Traits\RestrictedSetter;
+
 /**
+ * Class Capture
+ *
  * Capture Request
  *
- * @package    Genesis
- * @subpackage Request
+ * @package Genesis\API\Request\Financial
  */
-class Capture extends \Genesis\API\Request
+class Capture extends \Genesis\API\Request\Base\Financial\Reference
 {
-    /**
-     * Unique transaction id defined by mer-chant
-     *
-     * @var string
-     */
-    protected $transaction_id;
+    use TravelDataAttributes, BusinessAttributes, RestrictedSetter;
 
     /**
-     * Description of the transaction for later use
-     *
-     * @var string
+     * Returns the Request transaction type
+     * @return string
      */
-    protected $usage;
-
-    /**
-     * IPv4 address of customer
-     *
-     * @var string
-     */
-    protected $remote_ip;
-
-    /**
-     * Amount of transaction in minor currency unit
-     *
-     * @var int
-     */
-    protected $amount;
-
-    /**
-     * Currency code in ISO-4217
-     *
-     * @var string
-     */
-    protected $currency;
-
-    /**
-     * Unique id of the existing (target) transaction
-     *
-     * @var string
-     */
-    protected $reference_id;
-
-    /**
-     * Set the per-request configuration
-     *
-     * @return void
-     */
-    protected function initConfiguration()
+    protected function getTransactionType()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(
-            array(
-                'protocol' => 'https',
-                'port'     => 443,
-                'type'     => 'POST',
-                'format'   => 'xml',
-            )
-        );
-
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
+        return \Genesis\API\Constants\Transaction\Types::CAPTURE;
     }
 
     /**
-     * Set the required fields
-     *
-     * @return void
+     * @return array
      */
-    protected function setRequiredFields()
+    protected function getPaymentTransactionStructure()
     {
-        $requiredFields = array(
-            'transaction_id',
-            'reference_id',
-            'amount',
-            'currency'
+        return array_merge(
+            parent::getPaymentTransactionStructure(),
+            [
+                'travel'              => $this->getTravelData(),
+                'business_attributes' => $this->getBusinessAttributesStructure()
+            ]
         );
-
-        $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
-    }
-
-    /**
-     * Create the request's Tree structure
-     *
-     * @return void
-     */
-    protected function populateStructure()
-    {
-        $treeStructure = array(
-            'payment_transaction' => array(
-                'transaction_type' => \Genesis\API\Constants\Transaction\Types::CAPTURE,
-                'transaction_id'   => $this->transaction_id,
-                'usage'            => $this->usage,
-                'remote_ip'        => $this->remote_ip,
-                'reference_id'     => $this->reference_id,
-                'amount'           => $this->transform(
-                    'amount',
-                    array(
-                        $this->amount,
-                        $this->currency,
-                    )
-                ),
-                'currency'         => $this->currency
-            )
-        );
-
-        $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
     }
 }

@@ -21,8 +21,8 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-if (!class_exists('\EComProcessingAutoLoader', false)) {
+if (!class_exists('\EComprocessingAutoLoader', false)) {
     require_once __DIR__ . DIRECTORY_SEPARATOR . 'composer' . DIRECTORY_SEPARATOR . 'autoload_real.php';
 
-    return EComProcessingAutoLoader::getLoader();
+    return EComprocessingAutoLoader::getLoader();
 }

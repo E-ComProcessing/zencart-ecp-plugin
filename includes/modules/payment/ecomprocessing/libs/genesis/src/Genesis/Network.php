@@ -91,21 +91,24 @@ class Network
      * Set Header/Body of the HTTP request
      *
      * @param \Genesis\API\Request $apiContext
+     * @throws Exceptions\ErrorParameter
+     * @throws Exceptions\InvalidArgument
+     * @throws Exceptions\InvalidClassMethod
      */
     public function setApiCtxData($apiContext)
     {
         $this->context->prepareRequestBody(
-            array(
+            [
                 'body'       => $apiContext->getDocument(),
                 'url'        => $apiContext->getApiConfig('url'),
                 'type'       => $apiContext->getApiConfig('type'),
                 'port'       => $apiContext->getApiConfig('port'),
                 'protocol'   => $apiContext->getApiConfig('protocol'),
+                'format'     => $apiContext->getApiConfig('format'),
                 'timeout'    => \Genesis\Config::getNetworkTimeout(),
-                'ca_bundle'  => \Genesis\Config::getCertificateBundle(),
                 'user_agent' => sprintf('Genesis PHP Client v%s', \Genesis\Config::getVersion()),
-                'user_login' => sprintf('%s:%s', \Genesis\Config::getUsername(), \Genesis\Config::getPassword()),
-            )
+                'user_login' => sprintf('%s:%s', \Genesis\Config::getUsername(), \Genesis\Config::getPassword())
+            ]
         );
     }
 

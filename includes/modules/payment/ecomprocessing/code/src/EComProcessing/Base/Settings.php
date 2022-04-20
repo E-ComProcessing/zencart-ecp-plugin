@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,13 +13,13 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComProcessing\Base;
+namespace EComprocessing\Base;
 
-use \EComProcessing\Common as EComProcessingCommon;
+use \EComprocessing\Common as EComprocessingCommon;
 
 abstract class Settings
 {
@@ -53,7 +53,7 @@ abstract class Settings
             );
 
             if ($existingSettingItemArrayKey > -1) {
-                EComProcessingCommon::array_insert(
+                EComprocessingCommon::array_insert(
                     $keys,
                     $existingSettingItemArrayKey + ($position == 'after' ? 1 : 0),
                     static::getCompleteSettingKey($newSettingItem)
@@ -295,5 +295,15 @@ abstract class Settings
     public static function getCanceledOrderStatusID()
     {
         return (int) static::getSetting("CANCELED_ORDER_STATUS_ID");
+    }
+
+    /**
+     * Get WPF Tokenization setting value
+     *
+     * @return bool
+     */
+    public static function isWpfTokenizationEnabled()
+    {
+        return static::getBoolSetting('WPF_TOKENIZATION');
     }
 }

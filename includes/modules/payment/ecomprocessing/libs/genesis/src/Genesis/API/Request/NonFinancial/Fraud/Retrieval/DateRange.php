@@ -22,6 +22,9 @@
  */
 namespace Genesis\API\Request\NonFinancial\Fraud\Retrieval;
 
+use Genesis\API\Traits\RestrictedSetter;
+use Genesis\API\Constants\DateTimeFormat;
+
 /**
  * Retrieval request by Date Range
  *
@@ -31,17 +34,19 @@ namespace Genesis\API\Request\NonFinancial\Fraud\Retrieval;
 
 class DateRange extends \Genesis\API\Request
 {
+    use RestrictedSetter;
+
     /**
      * start of the requested date range
      *
-     * @var string (yyyy-mm-dd)
+     * @var \DateTime
      */
     protected $start_date;
 
     /**
      * end of the requested date range
      *
-     * @var string (yyyy-mm-dd)
+     * @var \DateTime
      */
     protected $end_date;
 
@@ -55,29 +60,75 @@ class DateRange extends \Genesis\API\Request
     protected $page;
 
     /**
+     * @param string $value
+     * @return $this
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    public function setStartDate($value)
+    {
+        if (empty($value)) {
+            $this->start_date = null;
+
+            return $this;
+        }
+
+        return $this->parseDate(
+            'start_date',
+            DateTimeFormat::getAll(),
+            $value,
+            'Invalid format for start_date'
+        );
+    }
+
+    /**
+     * @param string $value
+     * @return $this
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    public function setEndDate($value)
+    {
+        if (empty($value)) {
+            $this->end_date = null;
+
+            return $this;
+        }
+
+        return $this->parseDate(
+            'end_date',
+            DateTimeFormat::getAll(),
+            $value,
+            'Invalid format for end_date'
+        );
+    }
+
+    /**
+     * @return string
+     */
+    public function getStartDate()
+    {
+        return (empty($this->start_date)) ? null :
+            $this->start_date->format(DateTimeFormat::YYYY_MM_DD_ISO_8601);
+    }
+
+    /**
+     * @return string
+     */
+    public function getEndDate()
+    {
+        return (empty($this->end_date)) ? null :
+            $this->end_date->format(DateTimeFormat::YYYY_MM_DD_ISO_8601);
+    }
+
+    /**
      * Set the per-request configuration
      *
      * @return void
      */
     protected function initConfiguration()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(
-            array(
-                'protocol' => 'https',
-                'port'     => 443,
-                'type'     => 'POST',
-                'format'   => 'xml',
-            )
-        );
+        $this->initXmlConfiguration();
 
-        $this->setApiConfig(
-            'url',
-            $this->buildRequestURL(
-                'gateway',
-                'retrieval_requests/by_date',
-                false
-            )
-        );
+        $this->initApiGatewayConfiguration('retrieval_requests/by_date', false);
     }
 
     /**
@@ -87,9 +138,9 @@ class DateRange extends \Genesis\API\Request
      */
     protected function setRequiredFields()
     {
-        $requiredFields = array(
-            'start_date',
-        );
+        $requiredFields = [
+            'start_date'
+        ];
 
         $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
     }
@@ -101,13 +152,13 @@ class DateRange extends \Genesis\API\Request
      */
     protected function populateStructure()
     {
-        $treeStructure = array(
-            'retrieval_request_request' => array(
-                'start_date' => $this->start_date,
-                'end_date'   => $this->end_date,
-                'page'       => $this->page,
-            )
-        );
+        $treeStructure = [
+            'retrieval_request_request' => [
+                'start_date' => $this->getStartDate(),
+                'end_date'   => $this->getEndDate(),
+                'page'       => $this->page
+            ]
+        ];
 
         $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
     }

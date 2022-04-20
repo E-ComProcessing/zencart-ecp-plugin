@@ -20,7 +20,15 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
+
 namespace Genesis\API;
+
+use Genesis\API\Request\Base\Financial\Cards\CreditCard;
+use Genesis\API\Traits\MagicAccessors;
+use Genesis\API\Traits\Validations\Request\Validations;
+use Genesis\API\Validators\Request\Base\Validator as RequestValidator;
+use Genesis\Builder;
+use Genesis\Utils\Common as CommonUtils;
 
 /**
  * Class Request
@@ -29,9 +37,20 @@ namespace Genesis\API;
  *
  * @package    Genesis
  * @subpackage API
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 abstract class Request
 {
+    use MagicAccessors, Validations;
+
+    const PROTOCOL_HTTPS = 'https';
+    const PORT_HTTPS     = 443;
+
+    const METHOD_POST    = 'POST';
+    const METHOD_GET     = 'GET';
+    const METHOD_PUT     = 'PUT';
+
     /**
      * Store Request's configuration, like URL, Request Type, Transport Layer
      *
@@ -54,36 +73,6 @@ abstract class Request
     protected $treeStructure;
 
     /**
-     * Store the names of the fields that are Required
-     *
-     * @var \ArrayObject
-     */
-    protected $requiredFields;
-
-    /**
-     * Store the names of "conditionally" Required fields.
-     *
-     * @var \ArrayObject
-     */
-    protected $requiredFieldsConditional;
-
-    /**
-     * Store group name/fields where at least on the fields
-     * is required
-     *
-     * @var \ArrayObject
-     */
-    protected $requiredFieldsGroups;
-
-    /**
-     * Store a OR relationship between fields, whether at
-     * least of of them has to be filled in.
-     *
-     * @var \ArrayObject
-     */
-    protected $requiredFieldsOR;
-
-    /**
      * Store the generated Builder Body
      *
      * @var \Genesis\Builder
@@ -91,10 +80,21 @@ abstract class Request
     protected $builderContext;
 
     /**
-     * Bootstrap per-request configuration
+     * Interface for request builder
+     *
+     * @var string
      */
-    public function __construct()
+    protected $builderInterface;
+
+    /**
+     * Bootstrap per-request configuration
+     *
+     * @param string $builderInterface Defaults to XML
+     */
+    public function __construct($builderInterface = Builder::XML)
     {
+        $this->builderInterface = $builderInterface;
+
         $this->initConfiguration();
 
         // A request might not always feature 'required' fields
@@ -104,47 +104,19 @@ abstract class Request
     }
 
     /**
-     * Convert Pascal to Camel case and set the correct property
-     *
-     * @param $method
-     * @param $args
-     *
-     * @return $this
-     */
-    public function __call($method, $args)
-    {
-        list($action, $target) = \Genesis\Utils\Common::resolveDynamicMethod($method);
-
-        switch ($action) {
-            case 'get':
-                if (property_exists($this, $target)) {
-                    return $this->$target;
-                }
-
-                break;
-            case 'set':
-                if (property_exists($this, $target)) {
-                    $this->$target = trim(reset($args));
-                    return $this;
-                }
-
-                break;
-        }
-
-        return $this;
-    }
-
-    /**
      * Generate the XML output
      *
      * @return string - XML Document with request data
+     * @throws \Genesis\Exceptions\ErrorParameter
+     * @throws \Genesis\Exceptions\InvalidArgument
+     * @throws \Genesis\Exceptions\InvalidClassMethod
      */
     public function getDocument()
     {
         $this->processRequestParameters();
 
         if ($this->treeStructure instanceof \ArrayObject) {
-            $this->builderContext = new \Genesis\Builder();
+            $this->builderContext = new \Genesis\Builder($this->builderInterface);
             $this->builderContext->parseStructure($this->treeStructure->getArrayCopy());
 
             return $this->builderContext->getDocument();
@@ -162,6 +134,9 @@ abstract class Request
      * Step 4: Check for Required Fields
      *
      * @return void
+     * @throws \Genesis\Exceptions\InvalidArgument
+     * @throws \Genesis\Exceptions\InvalidClassMethod
+     * @throws \Genesis\Exceptions\ErrorParameter
      */
     protected function processRequestParameters()
     {
@@ -173,7 +148,6 @@ abstract class Request
         $this->checkRequirements();
     }
 
-
     /**
      * Remove empty keys/values from the structure
      *
@@ -183,8 +157,9 @@ abstract class Request
     {
         if ($this->treeStructure instanceof \ArrayObject) {
             $this->treeStructure->exchangeArray(
-                \Genesis\Utils\Common::emptyValueRecursiveRemoval(
-                    $this->treeStructure->getArrayCopy()
+                CommonUtils::emptyValueRecursiveRemoval(
+                    $this->treeStructure->getArrayCopy(),
+                    $this->getAllowedEmptyRequiredAttributes()
                 )
             );
         }
@@ -193,135 +168,13 @@ abstract class Request
     /**
      * Perform field validation
      *
+     * @throws \Genesis\Exceptions\InvalidArgument
      * @throws \Genesis\Exceptions\ErrorParameter
-     * @return void
+     * @throws \Genesis\Exceptions\InvalidClassMethod
      */
     protected function checkRequirements()
     {
-        $this->verifyFieldRequirements();
-
-        $this->verifyGroupRequirements();
-
-        $this->verifyConditionalRequirements();
-
-        $this->verifyConditionalFields();
-    }
-
-    /**
-     * Verify that all required fields are populated
-     *
-     * @throws \Genesis\Exceptions\ErrorParameter
-     */
-    protected function verifyFieldRequirements()
-    {
-        if (isset($this->requiredFields)) {
-            $this->requiredFields->setIteratorClass('RecursiveArrayIterator');
-
-            $iterator = new \RecursiveIteratorIterator($this->requiredFields->getIterator());
-
-            foreach ($iterator as $fieldName) {
-                if (empty($this->$fieldName)) {
-                    throw new \Genesis\Exceptions\ErrorParameter(
-                        sprintf('Empty (null) required parameter: %s', $fieldName)
-                    );
-                }
-            }
-        }
-    }
-
-    /**
-     * Verify that the group fields in the request are populated
-     *
-     * @throws \Genesis\Exceptions\ErrorParameter
-     */
-    protected function verifyGroupRequirements()
-    {
-        if (isset($this->requiredFieldsGroups)) {
-            $fields = $this->requiredFieldsGroups->getArrayCopy();
-
-            $emptyFlag = false;
-            $groupsFormatted = array();
-
-            foreach ($fields as $group => $groupFields) {
-                $groupsFormatted[] = sprintf(
-                    '%s (%s)',
-                    ucfirst($group),
-                    implode(', ', $groupFields)
-                );
-
-                foreach ($groupFields as $field) {
-                    if (!empty($this->$field)) {
-                        $emptyFlag = true;
-                    }
-                }
-            }
-
-            if (!$emptyFlag) {
-                throw new \Genesis\Exceptions\ErrorParameter(
-                    sprintf(
-                        'One of the following group/s of field/s must be filled in: %s%s',
-                        PHP_EOL,
-                        implode(
-                            PHP_EOL,
-                            $groupsFormatted
-                        )
-                    ),
-                    true
-                );
-            }
-        }
-    }
-
-    /**
-     * Verify that all fields (who depend on previously populated fields) are populated
-     *
-     * @throws \Genesis\Exceptions\ErrorParameter
-     */
-    protected function verifyConditionalRequirements()
-    {
-        if (isset($this->requiredFieldsConditional)) {
-            $fields = $this->requiredFieldsConditional->getArrayCopy();
-
-            foreach ($fields as $fieldName => $fieldDependencies) {
-                if (isset($this->$fieldName) && !empty($this->$fieldName)) {
-                    foreach ($fieldDependencies as $field) {
-                        if (empty($this->$field)) {
-                            throw new \Genesis\Exceptions\ErrorParameter(
-                                sprintf(
-                                    '%s is depending on: %s, which is empty (null)!',
-                                    $fieldName,
-                                    $field
-                                )
-                            );
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Verify conditional requirement, where either one of the fields are populated
-     *
-     * @throws \Genesis\Exceptions\ErrorParameter
-     */
-    protected function verifyConditionalFields()
-    {
-        if (isset($this->requiredFieldsOR)) {
-            $fields = $this->requiredFieldsOR->getArrayCopy();
-
-            $status = false;
-
-            foreach ($fields as $fieldName) {
-                if (isset($this->$fieldName) && !empty($this->$fieldName)) {
-                    $status = true;
-                }
-            }
-
-            if (!$status) {
-                throw new \Genesis\Exceptions\ErrorParameter(implode($fields));
-            }
-        }
+        $this->validate();
     }
 
     /**
@@ -336,10 +189,10 @@ abstract class Request
      */
     protected function transform($method, $args, $prefix = 'transform')
     {
-        $method = $prefix . \Genesis\Utils\Common::snakeCaseToCamelCase($method);
+        $method = $prefix . CommonUtils::snakeCaseToCamelCase($method);
 
         if (method_exists($this, $method)) {
-            $result = call_user_func_array(array($this, $method), $args);
+            $result = call_user_func_array([$this, $method], $args);
 
             if ($result) {
                 return $result;
@@ -359,7 +212,7 @@ abstract class Request
      */
     protected function transformAmount($amount = '', $currency = '')
     {
-        if (!empty($amount) && !empty($currency)) {
+        if (is_numeric($amount) && !empty($currency)) {
             return \Genesis\Utils\Currency::amountToExponent($amount, $currency);
         }
 
@@ -387,6 +240,7 @@ abstract class Request
      * @param $token    String   - should we append the token to the end of the url
      *
      * @return string            - complete URL
+     * @throws \Genesis\Exceptions\EnvironmentNotSet
      */
     protected function buildRequestURL($sub = 'gateway', $path = '', $token = '')
     {
@@ -396,12 +250,17 @@ abstract class Request
 
         $domain   = \Genesis\Config::getEndpoint();
 
-        $port     = ($this->getApiConfig('port')) ? $this->getApiConfig('port') : 443;
+        $port     = ($this->getApiConfig('port')) ? $this->getApiConfig('port') : Request::PORT_HTTPS;
 
         $path     = ($token) ? sprintf('%s/%s/', $path, $token) : $path;
 
         return sprintf(
-            '%s://%s%s:%s/%s', $protocol, $sub, $domain, $port, $path
+            '%s://%s%s:%s/%s',
+            $protocol,
+            $sub,
+            $domain,
+            $port,
+            $path
         );
     }
 
@@ -422,7 +281,77 @@ abstract class Request
      */
     protected function initConfiguration()
     {
+    }
 
+    /**
+     * Configures a Secured Post Request with Xml body
+     *
+     * @return void
+     */
+    protected function initXmlConfiguration()
+    {
+        $this->config = CommonUtils::createArrayObject(
+            [
+                'protocol' => Request::PROTOCOL_HTTPS,
+                'port'     => Request::PORT_HTTPS,
+                'type'     => Request::METHOD_POST,
+                'format'   => Builder::XML
+            ]
+        );
+    }
+
+    /**
+     * Configures a Secured Post Request with Json body
+     *
+     * @return void
+     */
+    protected function initJsonConfiguration()
+    {
+        $this->config = CommonUtils::createArrayObject(
+            [
+                'protocol' => Request::PROTOCOL_HTTPS,
+                'port'     => Request::PORT_HTTPS,
+                'type'     => Request::METHOD_POST,
+                'format'   => Builder::JSON
+            ]
+        );
+    }
+
+    /**
+     * Configures a Secure Post Request with Form body
+     *
+     * @return void
+     */
+    protected function initFormConfiguration()
+    {
+        $this->config = CommonUtils::createArrayObject(
+            [
+                'protocol' => Request::PROTOCOL_HTTPS,
+                'port'     => Request::PORT_HTTPS,
+                'type'     => Request::METHOD_POST,
+                'format'   => Builder::FORM
+            ]
+        );
+    }
+
+    /**
+     * Initializes Api EndPoint Url with request path & terminal token
+     *
+     * @param string $requestPath
+     * @param bool $includeToken
+     * @return void
+     * @throws \Genesis\Exceptions\EnvironmentNotSet
+     */
+    protected function initApiGatewayConfiguration($requestPath = 'process', $includeToken = true)
+    {
+        $this->setApiConfig(
+            'url',
+            $this->buildRequestURL(
+                'gateway',
+                $requestPath,
+                ($includeToken ? \Genesis\Config::getToken() : false)
+            )
+        );
     }
 
     /**
@@ -430,7 +359,6 @@ abstract class Request
      */
     protected function setRequiredFields()
     {
-
     }
 
     /**
@@ -439,6 +367,20 @@ abstract class Request
      */
     protected function populateStructure()
     {
+    }
 
+    /**
+     * Return the required parameters keys which values could evaluate as empty
+     *
+     * @return array
+     */
+    protected function getAllowedEmptyRequiredAttributes()
+    {
+        $allowedEmptyKeys = array();
+        if ($this->isZeroAmountAllowed()) {
+            array_push($allowedEmptyKeys, CreditCard::REQUEST_KEY_AMOUNT);
+        }
+
+        return $allowedEmptyKeys;
     }
 }

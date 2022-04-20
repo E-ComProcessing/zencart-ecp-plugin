@@ -60,13 +60,6 @@ class Methods
     const PRZELEWY24 = 'przelewy24';
 
     /**
-     * QIWI
-     *
-     * PPRO transaction
-     */
-    const QIWI = 'qiwi';
-
-    /**
      * SafetyPay
      *
      * PPRO transaction
@@ -74,16 +67,34 @@ class Methods
     const SAFETY_PAY = 'safetypay';
 
     /**
-     * Teleingreso
-     *
-     * PPRO transaction
-     */
-    const TELEINGRESO = 'teleingreso';
-
-    /**
      * TrustPay
      *
      * PPRO transaction
      */
     const TRUST_PAY = 'trustpay';
+
+    /**
+     * Mr.Cash
+     *
+     * PPRO transaction
+     */
+    const BCMC = 'bcmc';
+
+    /**
+     * MyBank
+     *
+     * PPRO transaction
+     */
+    const MYBANK = 'mybank';
+
+    /**
+     * Returns all available payment methods
+     * @return array
+     */
+    public static function getMethods()
+    {
+        $methods = \Genesis\Utils\Common::getClassConstants(__CLASS__);
+
+        return array_values($methods);
+    }
 }

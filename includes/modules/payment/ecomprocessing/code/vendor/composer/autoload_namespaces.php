@@ -25,5 +25,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'EComProcessing' => array($baseDir . '/src'),
+    'EComprocessing' => array($baseDir . '/src'),
 );

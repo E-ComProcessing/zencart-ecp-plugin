@@ -20,7 +20,17 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
+
 namespace Genesis;
+
+use Genesis\API\Constants\Transaction\Types;
+use Genesis\API\Request;
+use Genesis\API\Response;
+use Genesis\Exceptions\DeprecatedMethod;
+use Genesis\Exceptions\InvalidArgument;
+use Genesis\Exceptions\InvalidMethod;
+use Genesis\Utils\Common;
+use Genesis\Utils\Requirements;
 
 /**
  * Base class of Genesis
@@ -29,6 +39,8 @@ namespace Genesis;
  */
 class Genesis
 {
+    const REQUEST_NAMESPACE = '\Genesis\API\Request\\';
+
     /**
      * Store the Network Request Instance
      *
@@ -39,14 +51,14 @@ class Genesis
     /**
      * Store the Network Response Instance
      *
-     * @var \Genesis\API\Response
+     * @var Response
      */
     protected $responseCtx;
 
     /**
      * Store the Network Request Instance
      *
-     * @var \Genesis\Network
+     * @var Network
      */
     protected $networkCtx;
 
@@ -55,29 +67,118 @@ class Genesis
      *
      * @param $request - API Request name, please consult the README for a list of all requests
      *
-     * @throws Exceptions\InvalidMethod()
+     * @throws InvalidMethod
+     * @throws DeprecatedMethod
+     * @throws InvalidArgument
      */
     public function __construct($request)
     {
         // Verify system requirements
-        \Genesis\Utils\Requirements::verify();
+        Requirements::verify();
 
-        // Initialize the request
-        $request = sprintf('\Genesis\API\Request\%s', $request);
+        // Retrieve the library from request
+        $request = $this->getRequestClass($request);
 
-        if (class_exists($request)) {
-            $this->requestCtx = new $request;
-        } else {
-            throw new \Genesis\Exceptions\InvalidMethod(
+        // Validate the requested library
+        $this->validate($request);
+
+        // Initialize the Request library
+        $this->requestCtx = new $request();
+
+        // Initialize the Network
+        $this->networkCtx = new Network();
+
+        // Initialize Response Object
+        $this->responseCtx = new Response();
+    }
+
+    /**
+     * @param string $request
+     *
+     * @return string
+     */
+    protected function getRequestClass($request)
+    {
+        $parts = explode('\\', $request);
+        $lastIndex = count($parts) - 1;
+
+        switch ($parts[$lastIndex]) {
+            case 'Void':
+                $parts[$lastIndex] = 'Cancel';
+                break;
+        }
+
+        return sprintf(
+            self::REQUEST_NAMESPACE . '%s',
+            implode('\\', $parts)
+        );
+    }
+
+    /**
+     * Validation of the request library request
+     *
+     * @param $request
+     * @throws DeprecatedMethod
+     * @throws InvalidMethod
+     */
+    protected function validate($request)
+    {
+        $deprecatedRequests = array_map(
+            function ($request) {
+                return self::REQUEST_NAMESPACE . $request;
+            },
+            Types::getDeprecatedRequests()
+        );
+
+        if (in_array($request, $deprecatedRequests)) {
+            throw new DeprecatedMethod(
+                'The selected transaction type is deprecated!'
+            );
+        }
+
+        if (!class_exists($request)) {
+            throw new InvalidMethod(
                 'The selected transaction type is invalid!'
             );
         }
 
-        // Initialize the Network
-        $this->networkCtx = new \Genesis\Network();
+        if (Common::isClassAbstract($request)) {
+            throw new InvalidMethod(
+                'The selected transaction type is invalid, because it is abstract!'
+            );
+        }
+    }
 
-        // Initialize Response Object
-        $this->responseCtx = new \Genesis\API\Response();
+    /**
+     * @param string $trxType
+     * @param array $params
+     * @return Genesis
+     * @throws DeprecatedMethod
+     * @throws InvalidArgument
+     * @throws InvalidMethod
+     */
+    public static function financialFactory($trxType, $params = [])
+    {
+        $requestClass = Types::getFinancialRequestClassForTrxType($trxType);
+        if ($requestClass === false) {
+            throw new InvalidArgument(
+                'The selected transaction type is invalid!'
+            );
+        }
+
+        $genesis = new static($requestClass);
+
+        foreach ($params as $name => $value) {
+            $method = 'set' . Common::snakeCaseToCamelCase($name);
+
+            if (call_user_func([ $genesis->request(), $method ], $value) === false) {
+                throw new InvalidArgument(
+                    'Invalid argument ' . $name . ' for transaction type ' . $trxType
+                );
+            }
+        }
+
+        return $genesis;
     }
 
     /**
@@ -93,7 +194,7 @@ class Genesis
     /**
      * Get Response instance
      *
-     * @return \Genesis\API\Response
+     * @return Response
      */
     public function response()
     {
@@ -104,8 +205,10 @@ class Genesis
      * Send the request
      *
      * @throws Exceptions\ErrorAPI
-     * @throws Exceptions\InvalidArgument
+     * @throws Exceptions\ErrorParameter
+     * @throws Exceptions\InvalidClassMethod
      * @throws Exceptions\InvalidResponse
+     * @throws InvalidArgument
      */
     public function execute()
     {
@@ -124,7 +227,13 @@ class Genesis
 
         // Parse the response
         $this->responseCtx->parseResponse(
-            $this->networkCtx->getResponseBody()
+            $this->networkCtx
+        );
+
+        // Store the Response Object into the Request
+        // The Transaction type request will have access to the response after execute
+        $this->request()->setResponse(
+            $this->response()
         );
     }
 }

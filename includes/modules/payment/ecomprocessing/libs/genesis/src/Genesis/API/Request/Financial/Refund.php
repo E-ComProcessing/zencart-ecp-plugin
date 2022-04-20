@@ -22,117 +22,147 @@
  */
 namespace Genesis\API\Request\Financial;
 
+use Genesis\API\Traits\Request\Financial\BeneficiaryAttributes;
+use Genesis\API\Traits\Request\Financial\Refund\BankAttributes;
+use Genesis\API\Traits\RestrictedSetter;
+use Genesis\Utils\Common;
+use Genesis\Utils\Currency;
+
 /**
- * Refund request
+ * Class Refund
  *
- * @package    Genesis
- * @subpackage Request
+ * Refund Request
+ *
+ * @package Genesis\API\Request\Financial
  */
-class Refund extends \Genesis\API\Request
+class Refund extends \Genesis\API\Request\Base\Financial\Reference
 {
+    const CREDIT_REASON_INDICATOR_TRANSPORT_CANCELLATION   = 'A';
+    const CREDIT_REASON_INDICATOR_TRAVEL_TRANSPORT         = 'B';
+    const CREDIT_REASON_INDICATOR_PARTIAL_REFUND_OR_TICKET = 'P';
+    const CREDIT_REASON_INDICATOR_OTHER                    = 'O';
+    const TICKET_CHANGE_INDICATOR_TO_EXISTING              = 'C';
+    const TICKET_CHANGE_INDICATOR_TO_NEW                   = 'N';
+
+    use RestrictedSetter, BeneficiaryAttributes, BankAttributes;
+
     /**
-     * Unique transaction id defined by merchant
+     * This field indicates the reason for a credit to the cardholder.
+     * Allowed values: A, B, P, O
      *
      * @var string
      */
-    protected $transaction_id;
+    protected $credit_reason_indicator_1;
 
     /**
-     * Description of the transaction for later use
+     * This field indicates the reason for a credit to the cardholder.
+     * Allowed values: A, B, P, O
      *
      * @var string
      */
-    protected $usage;
+    protected $credit_reason_indicator_2;
 
     /**
-     * IPv4 address of customer
+     * This field will contain either a space or a code to indicate why a ticket was changed.
+     * Allowed values: C, N
      *
      * @var string
      */
-    protected $remote_ip;
+    protected $ticket_change_indicator;
 
     /**
-     * Amount of transaction in minor currency unit
-     *
-     * @var int
+     * Returns the Request transaction type
+     * @return string
      */
-    protected $amount;
-
-    /**
-     * Currency code in ISO-4217
-     *
-     * @var string
-     */
-    protected $currency;
-
-    /**
-     * Unique id of the existing (target) transaction
-     *
-     * @var string
-     */
-    protected $reference_id;
-
-    /**
-     * Set the per-request configuration
-     *
-     * @return void
-     */
-    protected function initConfiguration()
+    protected function getTransactionType()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(
-            array(
-                'protocol' => 'https',
-                'port'     => 443,
-                'type'     => 'POST',
-                'format'   => 'xml',
-            )
-        );
-
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
+        return \Genesis\API\Constants\Transaction\Types::REFUND;
     }
 
     /**
-     * Set the required fields
-     *
-     * @return void
+     * @return array
      */
-    protected function setRequiredFields()
+    protected function getPaymentTransactionStructure()
     {
-        $requiredFields = array(
-            'transaction_id',
-            'reference_id',
-            'amount',
-            'currency'
-        );
+        $beneficiaryAttributes = $this->getBeneficiaryAttributesStructure();
+        $bankAttributes        = $this->getBankAttributesStructure();
 
-        $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
+        return array_merge(
+            parent::getPaymentTransactionStructure(),
+            [
+                'travel' => [
+                    'ticket' => [
+                        'credit_reason_indicator_1' => $this->credit_reason_indicator_1,
+                        'credit_reason_indicator_2' => $this->credit_reason_indicator_2,
+                        'ticket_change_indicator'   => $this->ticket_change_indicator,
+                    ]
+                ]
+            ],
+            $beneficiaryAttributes,
+            $bankAttributes
+        );
     }
 
     /**
-     * Create the request's Tree structure
+     * @param $value
      *
-     * @return void
+     * @return Refund
+     * @throws \Genesis\Exceptions\InvalidArgument
      */
-    protected function populateStructure()
+    public function setCreditReasonIndicator1($value)
     {
-        $treeStructure = array(
-            'payment_transaction' => array(
-                'transaction_type' => \Genesis\API\Constants\Transaction\Types::REFUND,
-                'transaction_id'   => $this->transaction_id,
-                'usage'            => $this->usage,
-                'remote_ip'        => $this->remote_ip,
-                'reference_id'     => $this->reference_id,
-                'amount'           => $this->transform(
-                    'amount',
-                    array(
-                        $this->amount,
-                        $this->currency,
-                    )
-                ),
-                'currency'         => $this->currency
-            )
-        );
+        return $this->setCreditReasonIndicator('credit_reason_indicator_1', $value);
+    }
 
-        $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
+    /**
+     * @param $value
+     *
+     * @return Refund
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    public function setCreditReasonIndicator2($value)
+    {
+        return $this->setCreditReasonIndicator('credit_reason_indicator_2', $value);
+    }
+
+    /**
+     * @param $field
+     * @param $value
+     *
+     * @return Refund
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    protected function setCreditReasonIndicator($field, $value)
+    {
+        return $this->allowedOptionsSetter(
+            $field,
+            [
+                self::CREDIT_REASON_INDICATOR_TRANSPORT_CANCELLATION,
+                self::CREDIT_REASON_INDICATOR_TRAVEL_TRANSPORT,
+                self::CREDIT_REASON_INDICATOR_PARTIAL_REFUND_OR_TICKET,
+                self::CREDIT_REASON_INDICATOR_OTHER
+            ],
+            $value,
+            'Invalid credit reason indicator.'
+        );
+    }
+
+    /**
+     * @param $value
+     *
+     * @return Refund
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    public function setTicketChangeIndicator($value)
+    {
+        return $this->allowedOptionsSetter(
+            'ticket_change_indicator',
+            [
+                self::TICKET_CHANGE_INDICATOR_TO_EXISTING,
+                self::TICKET_CHANGE_INDICATOR_TO_NEW
+            ],
+            $value,
+            'Invalid ticket change indicator.'
+        );
     }
 }

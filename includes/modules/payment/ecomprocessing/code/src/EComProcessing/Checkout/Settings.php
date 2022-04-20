@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,67 +13,144 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComProcessing\Checkout;
+namespace EComprocessing\Checkout;
 
-class Settings extends \EComProcessing\Base\Settings
+use EComprocessing\Helpers\TransactionsHelper;
+use Genesis\API\Constants\Payment\Methods;
+use Genesis\API\Constants\Transaction\Names;
+use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
+use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
+use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
+use Genesis\API\Constants\Transaction\Types;
+
+/**
+ * Class Settings
+ *
+ * @category EComprocessing
+ *
+ * @package EComprocessing\Checkout
+ * @author  Client Inegrations <client_integrations@e-comprocessing.com>
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU, version 2 (GPL-2.0)
+ * @link    https://e-comprocessing.com
+ */
+class Settings extends \EComprocessing\Base\Settings
 {
     /**
      * Settings Values Prefix
+     *
      * @var string
      */
     static protected $prefix = ECOMPROCESSING_CHECKOUT_SETTINGS_PREFIX;
 
     /**
      * Gets a list of the available transaction types for a payment method
+     *
      * @return array
      */
     public static function getTransactionsList()
     {
-        return array(
-            \Genesis\API\Constants\Transaction\Types::ABNIDEAL            => "ABN iDEAL",
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE           => "Authorize",
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D        => "Authorize 3D",
-            \Genesis\API\Constants\Transaction\Types::CASHU               => "CashU",
-            \Genesis\API\Constants\Payment\Methods::EPS                   => "eps",
-            \Genesis\API\Constants\Payment\Methods::GIRO_PAY              => "GiroPay",
-            \Genesis\API\Constants\Transaction\Types::NETELLER            => "Neteller",
-            \Genesis\API\Constants\Payment\Methods::QIWI                  => "Qiwi",
-            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE   => "PayByVoucher (Sale)",
-            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY => "PayByVoucher (oBeP)",
-            \Genesis\API\Constants\Transaction\Types::PAYSAFECARD         => "PaySafeCard",
-            \Genesis\API\Constants\Payment\Methods::PRZELEWY24            => "Przelewy24",
-            \Genesis\API\Constants\Transaction\Types::POLI                => "POLi",
-            \Genesis\API\Constants\Payment\Methods::SAFETY_PAY            => "SafetyPay",
-            \Genesis\API\Constants\Transaction\Types::SALE                => "Sale",
-            \Genesis\API\Constants\Transaction\Types::SALE_3D             => "Sale 3D",
-            \Genesis\API\Constants\Transaction\Types::SOFORT              => "SOFORT",
-            \Genesis\API\Constants\Payment\Methods::TELEINGRESO           => "teleingreso",
-            \Genesis\API\Constants\Payment\Methods::TRUST_PAY             => "TrustPay",
-            \Genesis\API\Constants\Transaction\Types::WEBMONEY            => "WebMoney"
+        $data = array();
+
+        $transactionTypes = Types::getWPFTransactionTypes();
+        $excludedTypes    = TransactionsHelper::getRecurringTransactionTypes();
+
+        // Exclude PPRO transaction. This is not standalone transaction type
+        array_push($excludedTypes, Types::PPRO);
+
+        // Exclude Google Pay transaction. This will serve Google Pay payment methods
+        array_push($excludedTypes, Types::GOOGLE_PAY);
+
+        // Exclude PayPal transaction. This will serve PayPal payment methods
+        array_push($excludedTypes, Types::PAY_PAL);
+
+        // Exclude Apple Pay transaction
+        array_push($excludedTypes, Types::APPLE_PAY);
+
+        // Exclude Transaction Types
+        $transactionTypes = array_diff($transactionTypes, $excludedTypes);
+
+        // Add PPRO types
+        $pproTypes = array_map(
+            function ($type) {
+                return $type . PPRO_TRANSACTION_SUFFIX;
+            },
+            Methods::getMethods()
         );
+
+        // Add Google Pay types
+        $googlePayTypes = array_map(
+            function ($type) {
+                return GOOGLE_PAY_TRANSACTION_PREFIX . $type;
+            },
+            [
+                GooglePaymentTypes::AUTHORIZE,
+                GooglePaymentTypes::SALE
+            ]
+        );
+
+        // Add PayPal types
+        $payPalTypes = array_map(
+            function ($type) {
+                return PAYPAL_TRANSACTION_PREFIX . $type;
+            },
+            [
+                PayPalPaymentTypes::AUTHORIZE,
+                PayPalPaymentTypes::SALE,
+                PayPalPaymentTypes::EXPRESS,
+            ]
+        );
+
+        // Add Apple Pay types
+        $applePayTypes = array_map(
+            function ($type) {
+                return APPLE_PAY_TRANSACTION_PREFIX . $type;
+            },
+            [
+                ApplePaymentTypes::AUTHORIZE,
+                ApplePaymentTypes::SALE
+            ]
+        );
+
+        $transactionTypes = array_merge(
+            $transactionTypes,
+            $pproTypes,
+            $googlePayTypes,
+            $payPalTypes,
+            $applePayTypes
+        );
+        asort($transactionTypes);
+
+        foreach ($transactionTypes as $type) {
+            $name = Names::getName($type);
+            if (!Types::isValidTransactionType($type)) {
+                $name = strtoupper($type);
+            }
+
+            $data[$type] = $name;
+        }
+
+        return $data;
     }
 
+    /**
+     * Get available WPF languages
+     *
+     * @return array
+     */
     public static function getAvailableCheckoutLanguages()
     {
-        return array(
-            'en' => 'English',
-            'it' => 'Italian',
-            'es' => 'Spanish',
-            'fr' => 'French',
-            'de' => 'German',
-            'ja' => 'Japanese',
-            'zh' => 'Chinese',
-            'ar' => 'Arabic',
-            'pt' => 'Portuguese',
-            'tr' => 'Turkish',
-            'ru' => 'Russian',
-            'hi' => 'Hindi',
-            'bg' => 'Bulgarian'
-        );
+        $data     = array();
+        $isoCodes = \Genesis\API\Constants\i18n::getAll();
+
+        foreach ($isoCodes as $isoCode) {
+            $data[$isoCode] = TransactionsHelper::getLanguageByIsoCode($isoCode);
+        }
+
+        return $data;
     }
 
     /**
@@ -85,7 +162,8 @@ class Settings extends \EComProcessing\Base\Settings
         $keys = parent::getSettingKeys();
 
         static::appendSettingKey($keys, 'ENVIRONMENT', 'TRANSACTION_TYPES');
-        $keys[] = static::getPrefix() . "LANGUAGE";
+        $keys[] = static::getPrefix() . 'LANGUAGE';
+        $keys[] = static::getPrefix() . 'WPF_TOKENIZATION';
 
         return $keys;
     }

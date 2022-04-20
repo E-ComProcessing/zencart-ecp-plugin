@@ -20,7 +20,13 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
+
 namespace Genesis\API\Request\Financial\Alternatives;
+
+use Genesis\API\Traits\Request\Financial\AsyncAttributes;
+use Genesis\API\Traits\Request\Financial\PaymentAttributes;
+use Genesis\API\Traits\Request\AddressInfoAttributes;
+use Genesis\API\Traits\Request\Financial\PendingPaymentAttributes;
 
 /**
  * Class Sofort
@@ -28,76 +34,21 @@ namespace Genesis\API\Request\Financial\Alternatives;
  * Alternative payment method
  *
  * @package Genesis\API\Request\Financial\Alternatives
+ *
+ * @method string getBic()          Bank Identifier Code
+ * @method $this  setBic($value)    Bank Identifier Code
+ * @method string getIban()         International bank account number of the customer
+ * @method $this  setIban($value)   International bank account number of the customer
  */
-class Sofort extends \Genesis\API\Request
+class Sofort extends \Genesis\API\Request\Base\Financial
 {
-    /**
-     * Unique transaction id defined by mer-chant
-     *
-     * @var string
-     */
-    protected $transaction_id;
-
-    /**
-     * Description of the transaction for later use
-     *
-     * @var string
-     */
-    protected $usage;
-
-    /**
-     * IPv4 address of customer
-     *
-     * @var string
-     */
-    protected $remote_ip;
-
-    /**
-     * URL where customer is sent to after successful payment
-     *
-     * @var string
-     */
-    protected $return_success_url;
-
-    /**
-     * URL where customer is sent to after un-successful payment
-     *
-     * @var string
-     */
-    protected $return_failure_url;
-
-    /**
-     * Amount of transaction in minor currency unit
-     *
-     * @var int
-     */
-    protected $amount;
-
-    /**
-     * Currency code in ISO-4217
-     *
-     * @var string
-     */
-    protected $currency;
-
-    /**
-     * Email address of the Customer
-     *
-     * @var string
-     */
-    protected $customer_email;
-
-    /**
-     * Phone number of the customer
-     *
-     * @var string
-     */
-    protected $customer_phone;
+    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes, PendingPaymentAttributes;
 
     /**
      * The bank id of the bank where the customer resides
      *
      * @var string
+     * @deprecated
      */
     protected $customer_bank_id;
 
@@ -105,216 +56,81 @@ class Sofort extends \Genesis\API\Request
      * Bank identification number of the customer
      *
      * @var string
+     * @deprecated
      */
     protected $bank_account_number;
 
     /**
-     *Customer's Billing Address: First name
+     * Bank Identifier Code
      *
-     * @var string
+     * @var string $bic
      */
-    protected $billing_first_name;
+    protected $bic;
 
     /**
-     * Customer's Billing Address: Last name
+     * International bank account number of the customer
      *
-     * @var string
+     * @var string $iban
      */
-    protected $billing_last_name;
+    protected $iban;
 
     /**
-     * Customer's Billing Address: Part 1
+     * Alias of the bic
      *
-     * @var string
+     * @return string
+     * @deprecated Deprecated since 1.18.7. getBic() should used directly
      */
-    protected $billing_address1;
-
-    /**
-     * Customer's Billing Address: Part 2
-     * @var string
-     */
-    protected $billing_address2;
-
-    /**
-     * Customer's Billing Address: ZIP
-     *
-     * @var string
-     */
-    protected $billing_zip_code;
-
-    /**
-     * Customer's Billing Address: City
-     *
-     * @var string
-     */
-    protected $billing_city;
-
-    /**
-     * Customer's Billing Address: State
-     *
-     * format: ISO-3166-2
-     *
-     * @var string
-     */
-    protected $billing_state;
-
-    /**
-     * Customer's Billing Address: Country
-     *
-     * format: ISO-3166
-     *
-     * @var string
-     */
-    protected $billing_country;
-
-    /**
-     * Customer's Shipping Address: First name
-     *
-     * @var string
-     */
-    protected $shipping_first_name;
-
-    /**
-     * Customer's Shipping Address: Last name
-     *
-     * @var string
-     */
-    protected $shipping_last_name;
-
-    /**
-     * Customer's Shipping Address: Part 1
-     *
-     * @var string
-     */
-    protected $shipping_address1;
-
-    /**
-     * Customer's Shipping Address: Part 2
-     *
-     * @var string
-     */
-    protected $shipping_address2;
-
-    /**
-     * Customer's Shipping Address: ZIP
-     *
-     * @var string
-     */
-    protected $shipping_zip_code;
-
-    /**
-     * Customer's Shipping Address: City
-     *
-     * @var string
-     */
-    protected $shipping_city;
-
-    /**
-     * Customer's Shipping Address: State
-     *
-     * format: ISO-3166-2
-     *
-     * @var string
-     */
-    protected $shipping_state;
-
-    /**
-     * Customer's Shipping Address
-     *
-     * format: ISO-3166
-     *
-     * @var string
-     */
-    protected $shipping_country;
-
-    /**
-     * Social Security number or equivalent value for non US customers.
-     *
-     * @var string
-     */
-    protected $risk_ssn;
-
-    /**
-     * Customer's MAC address
-     *
-     * @var string
-     */
-    protected $risk_mac_address;
-
-    /**
-     * Customer's Session Id
-     *
-     * @var string
-     */
-    protected $risk_session_id;
-
-    /**
-     * Customer's User Id
-     *
-     * @var string
-     */
-    protected $risk_user_id;
-
-    /**
-     * Customer's User Level
-     *
-     * @var string
-     */
-    protected $risk_user_level;
-
-    /**
-     * Customer's Email address
-     *
-     * @note Set here if different from
-     *       shipping / billing
-     *
-     * @var string
-     */
-    protected $risk_email;
-
-    /**
-     * Customer's Phone number
-     *
-     * @note Set here if different from
-     *       shipping / billing
-     *
-     * @var string
-     */
-    protected $risk_phone;
-
-    /**
-     * Customer's IP address
-     *
-     * @note Set here if different from remote_ip
-     *
-     * @var string
-     */
-    protected $risk_remote_ip;
-
-    /**
-     * Customer's Serial Number
-     *
-     * @var string
-     */
-    protected $risk_serial_number;
-
-    /**
-     * Set the per-request configuration
-     *
-     * @return void
-     */
-    protected function initConfiguration()
+    public function getCustomerBankId()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(
-            array(
-                'protocol' => 'https',
-                'port'     => 443,
-                'type'     => 'POST',
-                'format'   => 'xml',
-            )
-        );
+        return $this->bic;
+    }
 
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
+    /**
+     * Alias of the bic
+     *
+     * @param string $value
+     * @return $this
+     * @deprecated Deprecated since 1.18.7. setBic($value) should used directly
+     */
+    public function setCustomerBankId($value)
+    {
+        $this->bic = $value;
+
+        return $this;
+    }
+
+    /**
+     * Alias of the iban
+     *
+     * @return string
+     * @deprecated Deprecated since 1.18.7. getIban() should used directly
+     */
+    public function getBankAccountNumber()
+    {
+        return $this->iban;
+    }
+
+    /**
+     * Alias of the Iban
+     *
+     * @param string $value
+     * @return $this
+     * @deprecated Deprecated since 1.18.7. setIban($value) should used directly
+     */
+    public function setBankAccountNumber($value)
+    {
+        $this->iban = $value;
+
+        return $this;
+    }
+
+    /**
+     * Returns the Request transaction type
+     * @return string
+     */
+    protected function getTransactionType()
+    {
+        return \Genesis\API\Constants\Transaction\Types::SOFORT;
     }
 
     /**
@@ -324,80 +140,44 @@ class Sofort extends \Genesis\API\Request
      */
     protected function setRequiredFields()
     {
-        $requiredFields = array(
+        $requiredFields = [
             'transaction_id',
-            'remote_ip',
             'amount',
             'currency',
             'return_success_url',
             'return_failure_url',
             'customer_email',
-        );
+            'billing_country'
+        ];
 
         $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
+
+        $requiredFieldValues = [
+            'billing_country' => ['AT', 'BE', 'DE', 'ES', 'IT', 'NL', 'CH', 'PL'],
+            'currency'        => \Genesis\Utils\Currency::getList()
+        ];
+
+        $this->requiredFieldValues = \Genesis\Utils\Common::createArrayObject($requiredFieldValues);
     }
 
     /**
-     * Create the request's Tree structure
-     *
-     * @return void
+     * Return additional request attributes
+     * @return array
      */
-    protected function populateStructure()
+    protected function getPaymentTransactionStructure()
     {
-        $treeStructure = array(
-            'payment_transaction' => array(
-                'transaction_type'    => \Genesis\API\Constants\Transaction\Types::SOFORT,
-                'transaction_id'      => $this->transaction_id,
-                'usage'               => $this->usage,
-                'remote_ip'           => $this->remote_ip,
-                'return_success_url'  => $this->return_success_url,
-                'return_failure_url'  => $this->return_failure_url,
-                'amount'              => $this->transform(
-                    'amount',
-                    array(
-                        $this->amount,
-                        $this->currency,
-                    )
-                ),
-                'currency'            => $this->currency,
-                'customer_email'      => $this->customer_email,
-                'customer_phone'      => $this->customer_phone,
-                'customer_bank_id'    => $this->customer_bank_id,
-                'bank_account_number' => $this->bank_account_number,
-                'billing_address'     => array(
-                    'first_name' => $this->billing_first_name,
-                    'last_name'  => $this->billing_last_name,
-                    'address1'   => $this->billing_address1,
-                    'address2'   => $this->billing_address2,
-                    'zip_code'   => $this->billing_zip_code,
-                    'city'       => $this->billing_city,
-                    'state'      => $this->billing_state,
-                    'country'    => $this->billing_country,
-                ),
-                'shipping_address'    => array(
-                    'first_name' => $this->shipping_first_name,
-                    'last_name'  => $this->shipping_last_name,
-                    'address1'   => $this->shipping_address1,
-                    'address2'   => $this->shipping_address2,
-                    'zip_code'   => $this->shipping_zip_code,
-                    'city'       => $this->shipping_city,
-                    'state'      => $this->shipping_state,
-                    'country'    => $this->shipping_country,
-                ),
-                'risk_params'         => array(
-                    'ssn'           => $this->risk_ssn,
-                    'mac_address'   => $this->risk_mac_address,
-                    'session_id'    => $this->risk_session_id,
-                    'user_id'       => $this->risk_user_id,
-                    'user_level'    => $this->risk_user_level,
-                    'email'         => $this->risk_email,
-                    'phone'         => $this->risk_phone,
-                    'remote_ip'     => $this->risk_remote_ip,
-                    'serial_number' => $this->risk_serial_number,
-                ),
-            )
-        );
-
-        $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
+        return [
+            'return_success_url'  => $this->return_success_url,
+            'return_failure_url'  => $this->return_failure_url,
+            'return_pending_url'  => $this->getReturnPendingUrl(),
+            'amount'              => $this->transformAmount($this->amount, $this->currency),
+            'currency'            => $this->currency,
+            'customer_email'      => $this->customer_email,
+            'customer_phone'      => $this->customer_phone,
+            'bic'                 => $this->bic,
+            'iban'                => $this->iban,
+            'billing_address'     => $this->getBillingAddressParamsStructure(),
+            'shipping_address'    => $this->getShippingAddressParamsStructure()
+        ];
     }
 }

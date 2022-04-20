@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 E-Comprocessing™
+ * Copyright (C) 2018 E-Comprocessing Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,18 +13,18 @@
  * GNU General Public License for more details.
  *
  * @author      E-Comprocessing
- * @copyright   2016 E-Comprocessing Ltd.
+ * @copyright   2018 E-Comprocessing Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComProcessing\Direct;
+namespace EComprocessing\Direct;
 
-use \EComProcessing\Common as EComProcessingCommon;
-use \EComProcessing\Direct\Settings as EComProcessingDirectSettings;
-use \EComProcessing\Direct\Transaction as EComProcessingDirectTransaction;
-use \EComProcessing\Direct\TransactionProcess as EComProcessingDirectTransactionProcess;
+use \EComprocessing\Common as EComprocessingCommon;
+use \EComprocessing\Direct\Settings as EComprocessingDirectSettings;
+use \EComprocessing\Direct\Transaction as EComprocessingDirectTransaction;
+use \EComprocessing\Direct\TransactionProcess as EComprocessingDirectTransactionProcess;
 
-class Notification extends \EComProcessing\Base\Notification
+class Notification extends \EComprocessing\Base\Notification
 {
     /**
      * ModuleCode, used for redirections and loading files
@@ -40,12 +40,12 @@ class Notification extends \EComProcessing\Base\Notification
     {
         global $db;
 
-        if (!EComProcessingDirectSettings::getStatus()) {
+        if (!EComprocessingDirectSettings::getStatus()) {
             exit(0);
         }
 
         parent::processNotification($requestData);
-        EComProcessingDirectTransactionProcess::bootstrap();
+        EComprocessingDirectTransactionProcess::bootstrap();
 
         try {
             $notification = new \Genesis\API\Notification($requestData);
@@ -54,7 +54,7 @@ class Notification extends \EComProcessing\Base\Notification
                 $notification->initReconciliation();
 
                 $reconcile = $notification->getReconciliationObject();
-                $timestamp = EComProcessingCommon::formatTimeStamp($reconcile->timestamp);
+                $timestamp = EComprocessingCommon::formatTimeStamp($reconcile->timestamp);
 
 
                 $data = array(
@@ -70,9 +70,9 @@ class Notification extends \EComProcessing\Base\Notification
                     'technical_message' => isset($reconcile->technical_message) ? $reconcile->technical_message : '',
                 );
 
-                EComProcessingDirectTransaction::populateTransaction($data);
+                EComprocessingDirectTransaction::populateTransaction($data);
 
-                $order_id = EComProcessingDirectTransaction::getOrderByTransaction(
+                $order_id = EComprocessingDirectTransaction::getOrderByTransaction(
                     $data['unique_id']
                 );
 
@@ -89,22 +89,22 @@ class Notification extends \EComProcessing\Base\Notification
 
                 switch ($reconcile->status) {
                     case \Genesis\API\Constants\Transaction\States::APPROVED:
-                        $order_status_id = EComProcessingDirectSettings::getProcessedOrderStatusID();
+                        $order_status_id = EComprocessingDirectSettings::getProcessedOrderStatusID();
                         break;
                     case \Genesis\API\Constants\Transaction\States::ERROR:
                     case \Genesis\API\Constants\Transaction\States::DECLINED:
-                        $order_status_id = EComProcessingDirectSettings::getFailedOrderStatusID();
+                        $order_status_id = EComprocessingDirectSettings::getFailedOrderStatusID();
                         break;
                     default:
-                        $order_status_id = EComProcessingDirectSettings::getOrderStatusID();
+                        $order_status_id = EComprocessingDirectSettings::getOrderStatusID();
                 }
 
-                EComProcessingDirectTransaction::setOrderStatus(
+                EComprocessingDirectTransaction::setOrderStatus(
                     $order['orders_id'],
                     $order_status_id
                 );
 
-                EComProcessingDirectTransaction::performOrderStatusHistory(
+                EComprocessingDirectTransaction::performOrderStatusHistory(
                     array(
                         'type'            => 'Notification',
                         'orders_id'       => $order['orders_id'],

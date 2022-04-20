@@ -24,9 +24,9 @@
 /**
  * Setup the namespaces and class loaders
  *
- * @class EComProcessingAutoLoader
+ * @class EComprocessingAutoLoader
  */
-class EComProcessingAutoLoader
+class EComprocessingAutoLoader
 {
     private static $loader;
 
@@ -45,9 +45,9 @@ class EComProcessingAutoLoader
             return self::$loader;
         }
 
-        spl_autoload_register(array('EComProcessingAutoLoader', 'loadClassLoader'), true, true);
+        spl_autoload_register(array('EComprocessingAutoLoader', 'loadClassLoader'), true, true);
         self::$loader = $loader = new \Composer\Autoload\ClassLoader();
-        spl_autoload_unregister(array('EComProcessingAutoLoader', 'loadClassLoader'));
+        spl_autoload_unregister(array('EComprocessingAutoLoader', 'loadClassLoader'));
 
         $map = require __DIR__ . '/autoload_namespaces.php';
         foreach ($map as $namespace => $path) {
