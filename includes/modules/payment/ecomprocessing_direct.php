@@ -19,15 +19,15 @@
 
 require DIR_FS_CATALOG . DIR_WS_INCLUDES . "modules/payment/ecomprocessing/code/vendor/autoload.php";
 
-use EComprocessing\Common                    as EComprocessingCommon;
-use EComprocessing\Direct\Installer          as EComprocessingDirectInstaller;
-use EComprocessing\Direct\Notification       as EComprocessingDirectNotification;
-use EComprocessing\Direct\Settings           as EComprocessingDirectSettings;
-use EComprocessing\Direct\Transaction        as EComprocessingDirectTransaction;
-use EComprocessing\Direct\TransactionProcess as EComprocessingDirectTransactionProcess;
-use EComprocessing\Direct\TemplateManager    as EComprocessingDirectTemplateManager;
+use Ecomprocessing\Common                    as EcomprocessingCommon;
+use Ecomprocessing\Direct\Installer          as EcomprocessingDirectInstaller;
+use Ecomprocessing\Direct\Notification       as EcomprocessingDirectNotification;
+use Ecomprocessing\Direct\Settings           as EcomprocessingDirectSettings;
+use Ecomprocessing\Direct\Transaction        as EcomprocessingDirectTransaction;
+use Ecomprocessing\Direct\TransactionProcess as EcomprocessingDirectTransactionProcess;
+use Ecomprocessing\Direct\TemplateManager    as EcomprocessingDirectTemplateManager;
 
-class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
+class Ecomprocessing_direct extends \Ecomprocessing\Base\PaymentMethod
 {
 
     /**
@@ -41,7 +41,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
     public function __construct()
     {
         $this->code = ECOMPROCESSING_DIRECT_CODE;
-        $this->version = "1.1.8";
+        $this->version = "1.1.10";
         parent::__construct();
     }
 
@@ -58,7 +58,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
                 $db->Execute(
                     "select configuration_value from " . TABLE_CONFIGURATION . "
                      where configuration_key = '" .
-                        EComprocessingDirectSettings::getCompleteSettingKey("STATUS") . "'"
+                        EcomprocessingDirectSettings::getCompleteSettingKey("STATUS") . "'"
                 );
             $this->_check = $check_query->RecordCount();
         }
@@ -71,7 +71,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     public function update_status()
     {
-        $this->enabled = EComprocessingDirectSettings::getIsAvailableOnCheckoutPage();
+        $this->enabled = EcomprocessingDirectSettings::getIsAvailableOnCheckoutPage();
     }
 
     /**
@@ -114,11 +114,11 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
 
     protected function getPaymentPageFields($order)
     {
-        if (EComprocessingDirectSettings::getShouldUseIntegratedPaymentTemplate()) {
+        if (EcomprocessingDirectSettings::getShouldUseIntegratedPaymentTemplate()) {
             return
                 array(
                     array('field' =>
-                        EComprocessingDirectTemplateManager::getCardHTMLContent(
+                        EcomprocessingDirectTemplateManager::getCardHTMLContent(
                             array(
                                 'title' =>
                                     MODULE_PAYMENT_ECOMPROCESSING_DIRECT_TEXT_INTEGRATED_TPL_TITLE,
@@ -267,7 +267,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
         $selection = array(
             'id' => $this->code,
             'module' =>
-                EComprocessingDirectSettings::getCheckoutPageTitle(
+                EcomprocessingDirectSettings::getCheckoutPageTitle(
                     MODULE_PAYMENT_ECOMPROCESSING_DIRECT_TEXT_TITLE
                 ) . MODULE_PAYMENT_ECOMPROCESSING_DIRECT_TEXT_PUBLIC_CHECKOUT_CONTAINER,
             'fields' => $this->getPaymentPageFields($order)
@@ -286,7 +286,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
 
         include(DIR_WS_CLASSES . 'cc_validation.php');
 
-        $ccInfo = EComprocessingDirectTemplateManager::getPostedCCInfo($_POST);
+        $ccInfo = EcomprocessingDirectTemplateManager::getPostedCCInfo($_POST);
 
         $cc_validation = new cc_validation();
         $result = $cc_validation->validate(
@@ -363,7 +363,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
                             0,
                             $_POST[$this->code . '_cc_expires_month'],
                             1,
-                            EComprocessingCommon::getCreditCardExpirationYear(
+                            EcomprocessingCommon::getCreditCardExpirationYear(
                                 $_POST[$this->code . '_cc_expires_year']
                             )
                         )
@@ -455,7 +455,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
         $prefix = self::PLATFORM_TRANSACTION_PREFIX;
         $data = new stdClass();
         $data->transaction_id = self::generateTransactionId($prefix);
-        $data->transaction_type = EComprocessingDirectSettings::getTransactionType();
+        $data->transaction_type = EcomprocessingDirectSettings::getTransactionType();
         $data->description = '';
 
         $order->info['cc_type']    = $_POST['cc_type'];
@@ -468,7 +468,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
             'cc_owner'        => $_POST['cc_owner'],
             'cc_number'       => $_POST['cc_number'],
             'cc_expiry_month' => $_POST['cc_expiry_month'],
-            'cc_expiry_year'  => EComprocessingCommon::getCreditCardExpirationYear(
+            'cc_expiry_year'  => EcomprocessingCommon::getCreditCardExpirationYear(
                 $_POST['cc_expiry_year']
             ),
             'cc_cvv'          => $_POST['cc_cvv']
@@ -482,17 +482,17 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
 
         $data->currency = $order->info['currency'];
 
-        if (EComprocessingDirectTransactionProcess::isAsyncTransaction($data->transaction_type)) {
+        if (EcomprocessingDirectTransactionProcess::isAsyncTransaction($data->transaction_type)) {
             $data->urls = array(
                 'notification' =>
-                    EComprocessingDirectNotification::buildNotificationUrl(),
+                    EcomprocessingDirectNotification::buildNotificationUrl(),
                 'return_success' =>
-                    EComprocessingDirectNotification::buildReturnURL(
-                        EComprocessingDirectNotification::ACTION_SUCCESS
+                    EcomprocessingDirectNotification::buildReturnURL(
+                        EcomprocessingDirectNotification::ACTION_SUCCESS
                     ),
                 'return_failure' =>
-                    EComprocessingDirectNotification::buildReturnURL(
-                        EComprocessingDirectNotification::ACTION_FAILURE
+                    EcomprocessingDirectNotification::buildReturnURL(
+                        EcomprocessingDirectNotification::ACTION_FAILURE
                     )
             );
         }
@@ -502,7 +502,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
         $errorMessage = null;
 
         try {
-            $this->responseObject = EComprocessingDirectTransactionProcess::pay($data);
+            $this->responseObject = EcomprocessingDirectTransactionProcess::pay($data);
         } catch (\Genesis\Exceptions\ErrorAPI $api) {
             $errorMessage = $api->getMessage();
             $this->responseObject = null;
@@ -548,25 +548,25 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
 
         switch ($this->responseObject->status) {
             case \Genesis\API\Constants\Transaction\States::APPROVED:
-                $orderStatusId = EComprocessingDirectSettings::getProcessedOrderStatusID();
+                $orderStatusId = EcomprocessingDirectSettings::getProcessedOrderStatusID();
                 $isPaymentSuccessful = true;
                 break;
             case \Genesis\API\Constants\Transaction\States::ERROR:
             case \Genesis\API\Constants\Transaction\States::DECLINED:
-                $orderStatusId = EComprocessingDirectSettings::getFailedOrderStatusID();
+                $orderStatusId = EcomprocessingDirectSettings::getFailedOrderStatusID();
                 $isPaymentSuccessful = false;
                 break;
             default:
-                $orderStatusId = EComprocessingDirectSettings::getOrderStatusID();
+                $orderStatusId = EcomprocessingDirectSettings::getOrderStatusID();
                 $isPaymentSuccessful = false;
         }
 
-        EComprocessingDirectTransaction::setOrderStatus(
+        EcomprocessingDirectTransaction::setOrderStatus(
             $orderId,
             $orderStatusId
         );
 
-        EComprocessingDirectTransaction::performOrderStatusHistory(
+        EcomprocessingDirectTransaction::performOrderStatusHistory(
             array(
                 'type'            => 'Gateway Response',
                 'orders_id'       => $orderId,
@@ -612,7 +612,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     public function admin_notification($zf_order_id)
     {
-        if (EComprocessingDirectSettings::getIsInstalled()) {
+        if (EcomprocessingDirectSettings::getIsInstalled()) {
             return parent::admin_notification($zf_order_id);
         } else {
             return false;
@@ -625,7 +625,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     public function install()
     {
-        EComprocessingDirectInstaller::installModule();
+        EcomprocessingDirectInstaller::installModule();
     }
 
     /**
@@ -634,7 +634,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     public function remove()
     {
-        EComprocessingDirectInstaller::removeModule();
+        EcomprocessingDirectInstaller::removeModule();
     }
 
     /**
@@ -644,7 +644,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     public function keys()
     {
-        return EComprocessingDirectSettings::getSettingKeys();
+        return EcomprocessingDirectSettings::getSettingKeys();
     }
 
     /**
@@ -655,7 +655,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     protected function getReferenceTransactionResponse($transaction_type, $data)
     {
-        return EComprocessingDirectTransactionProcess::$transaction_type($data);
+        return EcomprocessingDirectTransactionProcess::$transaction_type($data);
     }
 
     /**
@@ -666,7 +666,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
     {
         $data->params['modal'] = array(
             'capture' => array(
-                'allowed' => EComprocessingDirectSettings::getIsPartialCaptureAllowed(),
+                'allowed' => EcomprocessingDirectSettings::getIsPartialCaptureAllowed(),
                 'form' => array(
                     'action' => 'doCapture',
                 ),
@@ -675,7 +675,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
                 )
             ),
             'refund' => array(
-                'allowed' => EComprocessingDirectSettings::getIsPartialRefundAllowed(),
+                'allowed' => EcomprocessingDirectSettings::getIsPartialRefundAllowed(),
                 'form' => array(
                     'action' => 'doRefund',
                 ),
@@ -684,7 +684,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
                 )
             ),
             'void' => array(
-                'allowed' => EComprocessingDirectSettings::getIsVoidTransactionAllowed(),
+                'allowed' => EcomprocessingDirectSettings::getIsVoidTransactionAllowed(),
                 'form' => array(
                     'action' => 'doVoid',
                 ),
@@ -769,7 +769,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     protected function doPopulateTransaction($data)
     {
-        EComprocessingDirectTransaction::populateTransaction($data);
+        EcomprocessingDirectTransaction::populateTransaction($data);
     }
 
     /**
@@ -782,26 +782,26 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
         switch ($data['transaction_type']) {
             case \Genesis\API\Constants\Transaction\Types::CAPTURE:
                 $data['type'] = 'Captured';
-                $data['order_status_id'] = EComprocessingDirectSettings::getProcessedOrderStatusID();
+                $data['order_status_id'] = EcomprocessingDirectSettings::getProcessedOrderStatusID();
                 break;
 
             case \Genesis\API\Constants\Transaction\Types::REFUND:
                 $data['type'] = 'Refunded';
-                $data['order_status_id'] = EComprocessingDirectSettings::getRefundedOrderStatusID();
+                $data['order_status_id'] = EcomprocessingDirectSettings::getRefundedOrderStatusID();
                 break;
 
             case \Genesis\API\Constants\Transaction\Types::VOID:
                 $data['type'] = 'Voided';
-                $data['order_status_id'] = EComprocessingDirectSettings::getCanceledOrderStatusID();
+                $data['order_status_id'] = EcomprocessingDirectSettings::getCanceledOrderStatusID();
                 break;
         }
 
         if (isset($data['type']) && isset($data['order_status_id'])) {
-            EComprocessingDirectTransaction::setOrderStatus(
+            EcomprocessingDirectTransaction::setOrderStatus(
                 $data['orders_id'],
                 $data['order_status_id']
             );
-            EComprocessingDirectTransaction::performOrderStatusHistory($data);
+            EcomprocessingDirectTransaction::performOrderStatusHistory($data);
         }
     }
 
@@ -824,7 +824,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     protected function getTransactionsSumAmount($order_id, $reference_id, $types, $status)
     {
-        return EComprocessingDirectTransaction::getTransactionsSumAmount(
+        return EcomprocessingDirectTransaction::getTransactionsSumAmount(
             $order_id,
             $reference_id,
             $types,
@@ -841,7 +841,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     protected function getTransactionById($unique_id)
     {
-        return EComprocessingDirectTransaction::getTransactionById($unique_id);
+        return EcomprocessingDirectTransaction::getTransactionById($unique_id);
     }
 
     /**
@@ -854,7 +854,7 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     protected function getTransactionsByTypeAndStatus($order_id, $reference_id, $transaction_types, $status)
     {
-        return EComprocessingDirectTransaction::getTransactionsByTypeAndStatus(
+        return EcomprocessingDirectTransaction::getTransactionsByTypeAndStatus(
             $order_id,
             $reference_id,
             $transaction_types,
@@ -867,24 +867,24 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
      */
     protected function registerLibraries()
     {
-        EComprocessingDirectTransactionProcess::bootstrap();
+        EcomprocessingDirectTransactionProcess::bootstrap();
     }
 
     protected function init()
     {
-        $this->enabled = EComprocessingDirectSettings::getStatus();
+        $this->enabled = EcomprocessingDirectSettings::getStatus();
         if (IS_ADMIN_FLAG === true) {
             // Payment module title in Admin
             $this->title = MODULE_PAYMENT_ECOMPROCESSING_DIRECT_TEXT_TITLE;
 
-            if (EComprocessingDirectSettings::getIsInstalled()) {
-                if (!EComprocessingDirectSettings::getIsConfigured()) {
+            if (EcomprocessingDirectSettings::getIsInstalled()) {
+                if (!EcomprocessingDirectSettings::getIsConfigured()) {
                     $this->title .= '<span class="alert"> (Not Configured)</span>';
-                } elseif (!EComprocessingDirectSettings::getStatus()) {
+                } elseif (!EcomprocessingDirectSettings::getStatus()) {
                     $this->title .= '<span class="alert"> (Disabled)</span>';
-                } elseif (!EComprocessingCommon::getIsSSLEnabled()) {
+                } elseif (!EcomprocessingCommon::getIsSSLEnabled()) {
                     $this->title .= '<span class="alert"> (SSL NOT Enabled)</span>';
-                } elseif (!EComprocessingDirectSettings::getIsLiveMode()) {
+                } elseif (!EcomprocessingDirectSettings::getIsLiveMode()) {
                     $this->title .= '<span class="alert-warning"> (Staging Mode)</span>';
                 } else {
                     $this->title .= '<span class="alert-success"> (Live Mode)</span>';
@@ -903,10 +903,10 @@ class EComprocessing_direct extends \EComprocessing\Base\PaymentMethod
             ) .
             MODULE_PAYMENT_ECOMPROCESSING_DIRECT_TEXT_DESCRIPTION;
         // Sort Order of this payment option on the customer payment page
-        $this->sort_order = EComprocessingDirectSettings::getSortOrder();
+        $this->sort_order = EcomprocessingDirectSettings::getSortOrder();
         $this->order_status = (int)DEFAULT_ORDERS_STATUS_ID;
-        if (EComprocessingDirectSettings::getOrderStatusID() > 0) {
-            $this->order_status = EComprocessingDirectSettings::getOrderStatusID();
+        if (EcomprocessingDirectSettings::getOrderStatusID() > 0) {
+            $this->order_status = EcomprocessingDirectSettings::getOrderStatusID();
         }
 
         parent::init();

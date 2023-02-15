@@ -17,9 +17,9 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Base;
+namespace Ecomprocessing\Base;
 
-use EComprocessing\Helpers\TransactionsHelper;
+use Ecomprocessing\Helpers\TransactionsHelper;
 use Genesis\API\Constants\Transaction\Types;
 
 class TransactionProcess

@@ -21,9 +21,46 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-$vendorDir = dirname(dirname(__FILE__));
-$baseDir = dirname($vendorDir);
+namespace Genesis\API\Constants\Transaction\Parameters;
 
-return array(
-    'Ecomprocessing' => array($baseDir . '/src'),
-);
+use Genesis\Utils\Common as CommonUtils;
+
+/**
+ * Class RussianMobileOperators
+ *
+ * List of supported Russian mobile operators
+ *
+ * @package Genesis\API\Constants
+ */
+class RussianMobileOperators
+{
+    /**
+     * MTC
+     */
+    const MTC = 'mtc';
+
+    /**
+     * Megafon
+     */
+    const MEGAFON = 'megafon';
+
+    /**
+     * Tele2
+     */
+    const TELE2 = 'tele2';
+
+    /**
+     * Beeline
+     */
+    const BEELINE = 'beeline';
+
+    /**
+     * Retrieve list of all operator codes
+     *
+     * @return array
+     */
+    public static function getAll()
+    {
+        return CommonUtils::getClassConstants(self::class);
+    }
+}

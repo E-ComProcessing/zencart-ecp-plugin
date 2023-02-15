@@ -21,33 +21,74 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Genesis\API\Request\Financial\Vouchers;
+namespace Genesis\API\Request\Financial\Mobile;
 
+use Genesis\API\Constants\Transaction\Parameters\RussianMobileOperators;
+use Genesis\API\Constants\Transaction\Types;
+use Genesis\API\Request\Base\Financial;
 use Genesis\API\Traits\Request\AddressInfoAttributes;
 use Genesis\API\Traits\Request\Financial\AsyncAttributes;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
+use Genesis\API\Traits\Request\Financial\PendingPaymentAttributes;
+use Genesis\API\Traits\RestrictedSetter;
+use Genesis\Exceptions\InvalidArgument;
+use Genesis\Utils\Common as CommonUtils;
 
 /**
- * Class Paysafecard
+ * Class RussianMobileSale
  *
- * Paysafecard transactions are only asynchronous. After a successful validation of transaction parameters
- * transaction status is set to pending async the user is redirected to Paysafecard authentication page where
- * he enters additional information to finish the payment. When the payment reached a final state Genesis gateway
- * sends notification to merchant on the configured url into its account.
+ * Russian Mobile Sale Request
  *
- * @package Genesis\API\Request\Financial\Vouchers
+ * @package Genesis\API\Request\Financial\Mobile\RussianMobileSale
+ *
+ * @method string getTarget()
+ * @method string getOperator()
  */
-class Paysafecard extends \Genesis\API\Request\Base\Financial
+class RussianMobileSale extends Financial
 {
-    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes;
+    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes, PendingPaymentAttributes, RestrictedSetter;
+
+    const USAGE_MIN_LENGTH = 1;
+    const USAGE_MAX_LENGTH = 5;
 
     /**
-     * Returns the Request transaction type
+     * @var string
+     */
+    protected $operator;
+
+    /**
+     * @var string
+     */
+    protected $target;
+
+    /**
+     * @param $value
+     *
+     * @return $this
+     * @throws InvalidArgument
+     */
+    public function setUsage($value)
+    {
+        if ($value === null) {
+            $this->usage = null;
+
+            return $this;
+        }
+
+        return $this->setLimitedString(
+            'usage',
+            $value,
+            self::USAGE_MIN_LENGTH,
+            self::USAGE_MAX_LENGTH
+        );
+    }
+
+    /**
      * @return string
      */
     protected function getTransactionType()
     {
-        return \Genesis\API\Constants\Transaction\Types::PAYSAFECARD;
+        return Types::RUSSIAN_MOBILE_SALE;
     }
 
     /**
@@ -57,24 +98,33 @@ class Paysafecard extends \Genesis\API\Request\Base\Financial
      */
     protected function setRequiredFields()
     {
-        parent::setRequiredFields();
-
-        $requiredFieldValues = [
-            'billing_country' => [
-                'AU', 'AT', 'BE', 'BG', 'CA', 'HR', 'CY', 'CZ', 'DK', 'FI', 'FR',
-                'GE', 'DE', 'GI', 'GR', 'HU', 'IS', 'IE', 'IT', 'KW', 'LV', 'LI',
-                'LT', 'LU', 'MT', 'MX', 'MD', 'ME', 'NL', 'NZ', 'NO', 'PY', 'PE',
-                'PL', 'PT', 'RO', 'SA', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'AE',
-                'GB', 'US', 'UY'
-            ],
-            'currency'        => \Genesis\Utils\Currency::getList()
+        $requiredFields = [
+            'transaction_id',
+            'usage',
+            'return_success_url',
+            'return_failure_url',
+            'amount',
+            'currency',
+            'operator',
+            'target',
+            'customer_phone',
+            'billing_country'
         ];
 
-        $this->requiredFieldValues = \Genesis\Utils\Common::createArrayObject($requiredFieldValues);
+        $this->requiredFields = CommonUtils::createArrayObject($requiredFields);
+
+        $requiredFieldValues = [
+            'operator'        => RussianMobileOperators::getAll(),
+            'currency'        => ['RUB'],
+            'billing_country' => ['RU'],
+        ];
+
+        $this->requiredFieldValues = CommonUtils::createArrayObject($requiredFieldValues);
     }
 
     /**
      * Return additional request attributes
+     *
      * @return array
      */
     protected function getPaymentTransactionStructure()
@@ -82,8 +132,11 @@ class Paysafecard extends \Genesis\API\Request\Base\Financial
         return [
             'return_success_url' => $this->return_success_url,
             'return_failure_url' => $this->return_failure_url,
+            'return_pending_url' => $this->getReturnPendingUrl(),
             'amount'             => $this->transformAmount($this->amount, $this->currency),
             'currency'           => $this->currency,
+            'operator'           => $this->operator,
+            'target'             => $this->target,
             'customer_email'     => $this->customer_email,
             'customer_phone'     => $this->customer_phone,
             'billing_address'    => $this->getBillingAddressParamsStructure(),

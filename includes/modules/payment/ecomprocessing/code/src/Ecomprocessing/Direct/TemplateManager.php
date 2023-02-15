@@ -17,7 +17,7 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Direct;
+namespace Ecomprocessing\Direct;
 
 abstract class TemplateManager
 {
@@ -134,23 +134,23 @@ abstract class TemplateManager
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function() {
-                attachCardToWrapper()
+                attachCardToWrapperEcp()
 
                 jQuery('<?php echo $data['formSelectors']['expiryInput'];?>').keyup(function() {
-                    var ccExpiresMonthYear = jQuery(this).val().split(' / ');
+                    var ccExpiresMonthYearEcp = jQuery(this).val().split(' / ');
 
-                    if (ccExpiresMonthYear.length == 2) {
-                        jQuery('#<?php echo $data['hidden']['expiryMonth'];?>').val(ccExpiresMonthYear[0]);
-                        jQuery('#<?php echo $data['hidden']['expiryYear'];?>').val(ccExpiresMonthYear[1]);
+                    if (ccExpiresMonthYearEcp.length == 2) {
+                        jQuery('#<?php echo $data['hidden']['expiryMonth'];?>').val(ccExpiresMonthYearEcp[0]);
+                        jQuery('#<?php echo $data['hidden']['expiryYear'];?>').val(ccExpiresMonthYearEcp[1]);
                     }
                 });
 
             });
 
-            function attachCardToWrapper() {
-                var cardWrapper = jQuery('<?php echo $data['container'];?>');
+            function attachCardToWrapperEcp() {
+                var cardWrapperEcp = jQuery('<?php echo $data['container'];?>');
 
-                if (cardWrapper.length) {
+                if (cardWrapperEcp.length) {
                     new Card({
                         form: '<?php echo $data['form'];?>',
                         container: '<?php echo $data['container'];?>',

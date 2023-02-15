@@ -17,14 +17,14 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Direct;
+namespace Ecomprocessing\Direct;
 
-use \EComprocessing\Common as EComprocessingCommon;
-use \EComprocessing\Direct\Settings as EComprocessingDirectSettings;
-use \EComprocessing\Direct\Transaction as EComprocessingDirectTransaction;
-use \EComprocessing\Direct\TransactionProcess as EComprocessingDirectTransactionProcess;
+use \Ecomprocessing\Common as EcomprocessingCommon;
+use \Ecomprocessing\Direct\Settings as EcomprocessingDirectSettings;
+use \Ecomprocessing\Direct\Transaction as EcomprocessingDirectTransaction;
+use \Ecomprocessing\Direct\TransactionProcess as EcomprocessingDirectTransactionProcess;
 
-class Notification extends \EComprocessing\Base\Notification
+class Notification extends \Ecomprocessing\Base\Notification
 {
     /**
      * ModuleCode, used for redirections and loading files
@@ -135,7 +135,7 @@ class Notification extends \EComprocessing\Base\Notification
     {
         return html_entity_decode(
             zen_href_link(
-                FILENAME_EMECHANTPAY_DIRECT_IPN,
+                FILENAME_ECOMPROCESSING_DIRECT_IPN,
                 "return=$action",
                 "SSL",
                 false

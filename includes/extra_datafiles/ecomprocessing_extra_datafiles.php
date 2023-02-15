@@ -22,13 +22,13 @@ if (!defined('IS_ADMIN_FLAG')) {
 }
 
 define('ECOMPROCESSING_CHECKOUT_CODE', 'ecomprocessing_checkout');
-define('FILENAME_EMECHANTPAY_CHECKOUT_IPN', 'ecomprocessing_checkout_ipn');
+define('FILENAME_ECOMPROCESSING_CHECKOUT_IPN', 'ecomprocessing_checkout_ipn');
 define('ECOMPROCESSING_CHECKOUT_SETTINGS_PREFIX', 'MODULE_PAYMENT_ECOMPROCESSING_CHECKOUT_');
 define('TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS', DB_PREFIX . 'ecomprocessing_checkout_transactions');
 define('TABLE_ECOMPROCESSING_CHECKOUT_CONSUMERS', DB_PREFIX . 'ecomprocessing_checkout_consumers');
 
 define('ECOMPROCESSING_DIRECT_CODE', 'ecomprocessing_direct');
-define('FILENAME_EMECHANTPAY_DIRECT_IPN', 'ecomprocessing_direct_ipn');
+define('FILENAME_ECOMPROCESSING_DIRECT_IPN', 'ecomprocessing_direct_ipn');
 define('ECOMPROCESSING_DIRECT_SETTINGS_PREFIX', 'MODULE_PAYMENT_ECOMPROCESSING_DIRECT_');
 define('TABLE_ECOMPROCESSING_DIRECT_TRANSACTIONS', DB_PREFIX . 'ecomprocessing_direct_transactions');
 define('PPRO_TRANSACTION_SUFFIX', '_ppro');

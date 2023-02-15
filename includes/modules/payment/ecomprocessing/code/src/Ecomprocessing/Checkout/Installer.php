@@ -17,12 +17,12 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Checkout;
+namespace Ecomprocessing\Checkout;
 
-use \EComprocessing\Checkout\Settings as EmpCheckoutSettings;
-use \EComprocessing\Common            as EComprocessingCommon;
+use \Ecomprocessing\Checkout\Settings as EcpCheckoutSettings;
+use \Ecomprocessing\Common            as EcomprocessingCommon;
 
-class Installer extends \EComprocessing\Base\Installer
+class Installer extends \Ecomprocessing\Base\Installer
 {
     /**
      * Transaction DatabaseTableName
@@ -44,7 +44,7 @@ class Installer extends \EComprocessing\Base\Installer
     {
         global $messageStack;
 
-        if (EmpCheckoutSettings::getIsInstalled()) {
+        if (EcpCheckoutSettings::getIsInstalled()) {
             $messageStack->add_session('E-Comprocessing Checkout module already installed.', 'error');
             zen_redirect(zen_href_link(FILENAME_MODULES, 'set=payment&module=' . ECOMPROCESSING_CHECKOUT_CODE, 'NONSSL'));
             return 'failed';
@@ -119,7 +119,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
              values
             ('Enable E-Comprocessing Checkout Module',
-            '" . EmpCheckoutSettings::getCompleteSettingKey('STATUS') . "',
+            '" . EcpCheckoutSettings::getCompleteSettingKey('STATUS') . "',
             'true',
             'Do you want to process payments via E-Comprocessing''s Genesis Gateway?',
             '6', '3', 'ecp_zfg_draw_toggle(', 'ecp_zfg_get_toggle_value', now())"
@@ -131,7 +131,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, date_added)
             values
             ('Checkout Title',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'CHECKOUT_PAGE_TITLE'
             ) . "',
             'Pay safely with E-Comprocessing Checkout',
@@ -158,7 +158,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, date_added)
             values
             ('Genesis API Username',
-            '" . EmpCheckoutSettings::getCompleteSettingKey('USERNAME') . "',
+            '" . EcpCheckoutSettings::getCompleteSettingKey('USERNAME') . "',
             '', 'Enter your Username, required for accessing the Genesis Gateway',
             '6', '4', 'ecp_zfg_draw_input({$requiredOptionsAttributes}, ', now())"
         );
@@ -169,7 +169,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, date_added)
             values
             ('Genesis API Password',
-            '" . EmpCheckoutSettings::getCompleteSettingKey('PASSWORD') . "',
+            '" . EcpCheckoutSettings::getCompleteSettingKey('PASSWORD') . "',
             '', 'Enter your Password, required for accessing the Genesis Gateway',
             '6', '4', 'ecp_zfg_draw_input({$requiredOptionsAttributes}, ', now())"
         );
@@ -180,7 +180,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Live Mode',
-            '" . EmpCheckoutSettings::getCompleteSettingKey('ENVIRONMENT') . "',
+            '" . EcpCheckoutSettings::getCompleteSettingKey('ENVIRONMENT') . "',
             'false', 'If disabled, transactions are going through our Staging " .
             "(Test) server, NO MONEY ARE BEING TRANSFERRED', '6', '3',
             'ecp_zfg_draw_toggle(', 'ecp_zfg_get_toggle_value', now())"
@@ -200,7 +200,15 @@ class Installer extends \EComprocessing\Base\Installer
         $requiredOptionsAttributes = static::_getRequiredOptionsAttributes();
         $transaction_types
             = EComprocessingCommon::buildSettingsDropDownOptions(
-                EmpCheckoutSettings::getTransactionsList()
+                EcpCheckoutSettings::getTransactionsList()
+            );
+
+        $placeholder = ['none' => 'No specific Bank in use'];
+        $availableBankCodes
+            = $placeholder + EcpCheckoutSettings::getAvailableBankCodes();
+        $bank_codes
+            = EComprocessingCommon::buildSettingsDropDownOptions(
+                $availableBankCodes
             );
 
         $db->Execute(
@@ -210,13 +218,28 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, date_added)
             values
             ('Transaction Types',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'TRANSACTION_TYPES'
             ) . "',
             '" . \Genesis\API\Constants\Transaction\Types::SALE . "',
-            'What transaction type should we use upon purchase?.', '6', '0',
+            'What transaction type should we use upon purchase?', '6', '0',
             'ecp_zfg_select_drop_down_multiple({$requiredOptionsAttributes}, " .
             "{$transaction_types}, ', now())"
+        );
+        $db->Execute(
+            'insert into ' . TABLE_CONFIGURATION . "
+            (configuration_title, configuration_key, configuration_value,
+            configuration_description, configuration_group_id, sort_order,
+            set_function, date_added)
+            values
+            ('Bank codes for Online banking',
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
+                'BANK_CODES'
+            ) . "',
+            'none',
+            'Select Bank code(s) for Online banking transaction.', '6', '0',
+            'ecp_zfg_select_drop_down_multiple({$requiredOptionsAttributes}, " .
+            "{$bank_codes}, ', now())"
         );
         $db->Execute(
             'insert into ' . TABLE_CONFIGURATION . "
@@ -225,7 +248,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Partial Capture',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'ALLOW_PARTIAL_CAPTURE'
             ) . "',
             'true', 'Use this option to allow / deny Partial Capture Transactions',
@@ -238,7 +261,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Partial Refund',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'ALLOW_PARTIAL_REFUND'
             ) . "',
             'true', 'Use this option to allow / deny Partial Refund Transactions',
@@ -251,7 +274,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Cancel Transaction',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'ALLOW_VOID_TRANSACTIONS'
             ) . "',
             'true', 'Use this option to allow / deny Cancel Transactions', '6', '3',
@@ -270,7 +293,7 @@ class Installer extends \EComprocessing\Base\Installer
 
         $sortOrderAttributes = "array(''maxlength'' => ''3'')";
         $languages           = EComprocessingCommon::buildSettingsDropDownOptions(
-            EmpCheckoutSettings::getAvailableCheckoutLanguages()
+            EcpCheckoutSettings::getAvailableCheckoutLanguages()
         );
 
         $db->Execute(
@@ -280,7 +303,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, date_added)
             values
             ('Checkout Page Language',
-            '" . EmpCheckoutSettings::getCompleteSettingKey('LANGUAGE') . "',
+            '" . EcpCheckoutSettings::getCompleteSettingKey('LANGUAGE') . "',
             'en', 'What language (localization) should we have on the Checkout?.',
             '6', '0', 'ecp_zfg_select_drop_down_single({$languages},', now())"
         );
@@ -291,7 +314,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('WPF Tokenization',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'WPF_TOKENIZATION'
             ) . "',
             'false', 'Enable WPF Tokenization', '6', '3', 'ecp_zfg_draw_toggle(',
@@ -304,7 +327,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, date_added)
             values
             ('Sort order of display.',
-            '" . EmpCheckoutSettings::getCompleteSettingKey('SORT_ORDER') . "',
+            '" . EcpCheckoutSettings::getCompleteSettingKey('SORT_ORDER') . "',
             '0', 'Sort order of display. Lowest is displayed first.', '6', '0',
             'ecp_zfg_draw_number_input({$sortOrderAttributes}, ', now())"
         );
@@ -328,7 +351,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Set Default Order Status',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'ORDER_STATUS_ID'
             ) . "',
             '1', 'Set the default status of orders made with this payment module" .
@@ -342,7 +365,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Set Failed Order Status',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'FAILED_ORDER_STATUS_ID'
             ) . "',
             '1', 'Set the status of failed orders made with this payment module to" .
@@ -356,7 +379,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Set Processed Order Status',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'PROCESSED_ORDER_STATUS_ID'
             ) . "',
             '2', 'Set the status of processed orders made with this payment " .
@@ -370,7 +393,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Set Refunded Order Status',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'REFUNDED_ORDER_STATUS_ID'
             ) . "',
             '1', 'Set the status of refunded orders made with this payment module',
@@ -384,7 +407,7 @@ class Installer extends \EComprocessing\Base\Installer
             set_function, use_function, date_added)
             values
             ('Set Canceled Order Status',
-            '" . EmpCheckoutSettings::getCompleteSettingKey(
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'CANCELED_ORDER_STATUS_ID'
             ) . "',
             '1', 'Set the status of canceled orders made with this payment module',

@@ -21,9 +21,33 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-$vendorDir = dirname(dirname(__FILE__));
-$baseDir = dirname($vendorDir);
+namespace Genesis\API\Constants\Transaction\Parameters\Payout;
 
-return array(
-    'Ecomprocessing' => array($baseDir . '/src'),
-);
+use Genesis\Utils\Common as CommonUtils;
+
+/**
+ * Money transfer payout is a standard payout with additional parameters.
+ * The section and parameters below are optional and to be considered only when present.
+ *
+ * @package Genesis\API\Constants\Transaction\Parameters\Payout
+ */
+class MoneyTransferTypes
+{
+    const ACCOUNT_TO_ACCOUNT = 'account_to_account';
+
+    const PERSON_TO_PERSON   = 'person_to_person';
+
+    const WALLET_TRANSFER    = 'wallet_transfer';
+
+    const FUNDS_TRANSFER     = 'funds_transfer';
+
+    /**
+     * Get payment allowed payment
+     *
+     * @return array
+     */
+    public static function getAllowedMoneyTransferTypes()
+    {
+        return CommonUtils::getClassConstants(self::class);
+    }
+}

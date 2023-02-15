@@ -17,7 +17,7 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Helpers;
+namespace Ecomprocessing\Helpers;
 
 use Genesis\API\Constants\Transaction\Types;
 use Genesis\API\Request\Financial\Alternatives\Klarna\Item;
@@ -26,9 +26,9 @@ use Genesis\API\Request\Financial\Alternatives\Klarna\Items;
 /**
  * Class TransactionsHelper
  *
- * @category EComprocessing
+ * @category Ecomprocessing
  *
- * @package EComprocessing\Helpers
+ * @package Ecomprocessing\Helpers
  * @author  Client Inegrations <client_integrations@e-comprocessing.com>
  * @license http://opensource.org/licenses/gpl-2.0.php GNU, version 2 (GPL-2.0)
  * @link    https://e-comprocessing.com

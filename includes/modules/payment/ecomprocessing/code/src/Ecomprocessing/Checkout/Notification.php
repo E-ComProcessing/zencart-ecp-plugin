@@ -17,14 +17,14 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Checkout;
+namespace Ecomprocessing\Checkout;
 
-use \EComprocessing\Checkout\Settings as EComprocessingCheckoutSettings;
-use \EComprocessing\Common as EComprocessingCommon;
-use \EComprocessing\Checkout\Transaction as EComprocessingCheckoutTransaction;
-use \EComprocessing\Checkout\TransactionProcess as EComprocessingCheckoutTransactionProcess;
+use \Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
+use \Ecomprocessing\Common as EcomprocessingCommon;
+use \Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
+use \Ecomprocessing\Checkout\TransactionProcess as EcomprocessingCheckoutTransactionProcess;
 
-class Notification extends \EComprocessing\Base\Notification
+class Notification extends \Ecomprocessing\Base\Notification
 {
     /**
      * ModuleCode, used for redirections and loading files
@@ -205,7 +205,7 @@ class Notification extends \EComprocessing\Base\Notification
     {
         return html_entity_decode(
             zen_href_link(
-                FILENAME_EMECHANTPAY_CHECKOUT_IPN,
+                FILENAME_ECOMPROCESSING_CHECKOUT_IPN,
                 "return=$action",
                 "SSL",
                 false

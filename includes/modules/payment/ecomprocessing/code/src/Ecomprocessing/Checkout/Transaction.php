@@ -17,9 +17,9 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Checkout;
+namespace Ecomprocessing\Checkout;
 
-class Transaction extends \EComprocessing\Base\Transaction
+class Transaction extends \Ecomprocessing\Base\Transaction
 {
     /**
      * Transaction DatabaseTableName

@@ -21,9 +21,56 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-$vendorDir = dirname(dirname(__FILE__));
-$baseDir = dirname($vendorDir);
+namespace Genesis\API\Constants\Transaction\Parameters;
 
-return array(
-    'Ecomprocessing' => array($baseDir . '/src'),
-);
+use Genesis\Utils\Common;
+
+/**
+ * Class AfricanMobileOperators
+ *
+ * List of supported African mobile operators
+ *
+ * @package Genesis\API\Constants
+ */
+class AfricanMobileOperators
+{
+    /**
+     * Airtel Money
+     */
+    const AIRTEL = 'AIRTEL';
+
+    /**
+     * MTN Mobile Money
+     */
+    const MTN = 'MTN';
+
+    /**
+     * Tigo Cash
+     */
+    const TIGO = 'TIGO';
+
+    /**
+     * M-PESA
+     */
+    const VODACOM = 'VODACOM';
+
+    /**
+     * M-PESA
+     */
+    const SAFARICOM = 'SAFARICOM';
+
+    /**
+     * e-Mola
+     */
+    const MOVITEL = 'MOVITEL';
+
+    /**
+     * Retrieve list of all operator codes
+     *
+     * @return array
+     */
+    public static function getAllowedPayoutOperators()
+    {
+        return Common::getClassConstants(self::class);
+    }
+}

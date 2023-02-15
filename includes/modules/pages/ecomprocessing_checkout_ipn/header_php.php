@@ -19,4 +19,4 @@
 
 require DIR_FS_CATALOG . DIR_WS_INCLUDES . "modules/payment/ecomprocessing/code/vendor/autoload.php";
 
-\EComprocessing\Checkout\Notification::handleNotification($_POST);
+\Ecomprocessing\Checkout\Notification::handleNotification($_POST);

@@ -17,9 +17,10 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Checkout;
+namespace Ecomprocessing\Checkout;
 
-use EComprocessing\Helpers\TransactionsHelper;
+use Ecomprocessing\Helpers\TransactionsHelper;
+use Genesis\API\Constants\Banks;
 use Genesis\API\Constants\Payment\Methods;
 use Genesis\API\Constants\Transaction\Names;
 use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
@@ -30,14 +31,14 @@ use Genesis\API\Constants\Transaction\Types;
 /**
  * Class Settings
  *
- * @category EComprocessing
+ * @category Ecomprocessing
  *
- * @package EComprocessing\Checkout
+ * @package Ecomprocessing\Checkout
  * @author  Client Inegrations <client_integrations@e-comprocessing.com>
  * @license http://opensource.org/licenses/gpl-2.0.php GNU, version 2 (GPL-2.0)
  * @link    https://e-comprocessing.com
  */
-class Settings extends \EComprocessing\Base\Settings
+class Settings extends \Ecomprocessing\Base\Settings
 {
     /**
      * Settings Values Prefix
@@ -162,6 +163,11 @@ class Settings extends \EComprocessing\Base\Settings
         $keys = parent::getSettingKeys();
 
         static::appendSettingKey($keys, 'ENVIRONMENT', 'TRANSACTION_TYPES');
+        static::appendSettingKey(
+            $keys,
+            'TRANSACTION_TYPES',
+            'BANK_CODES'
+        );
         $keys[] = static::getPrefix() . 'LANGUAGE';
         $keys[] = static::getPrefix() . 'WPF_TOKENIZATION';
 
@@ -185,6 +191,25 @@ class Settings extends \EComprocessing\Base\Settings
     }
 
     /**
+     * Get Selected Payment methods for Online banking
+     *
+     * @return array
+     */
+    public static function getSelectedBankCodes()
+    {
+        $bankCodes = static::getSetting("BANK_CODES");
+
+        return
+            array_map(
+                'trim',
+                explode(
+                    ',',
+                    $bankCodes
+                )
+            );
+    }
+
+    /**
      * Get Checkout Language for the Genesis WPF
      * @param string $default
      * @return string
@@ -192,5 +217,17 @@ class Settings extends \EComprocessing\Base\Settings
     public static function getLanguage($default = 'en')
     {
         return (static::getSetting("LANGUAGE") ?: $default);
+    }
+
+    /**
+     * List of all available Payment method for Online banking
+     *
+     * @return array
+     */
+    public static function getAvailableBankCodes()
+    {
+        return [
+            Banks::CPI => 'Interac Combined Pay-in'
+        ];
     }
 }

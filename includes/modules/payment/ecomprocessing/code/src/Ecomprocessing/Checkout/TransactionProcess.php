@@ -17,17 +17,17 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Checkout;
+namespace Ecomprocessing\Checkout;
 
-use \EComprocessing\Checkout\Settings as EComprocessingCheckoutSettings;
-use \EComprocessing\Checkout\Transaction as EComprocessingCheckoutTransaction;
-use EComprocessing\Helpers\TransactionsHelper;
+use \Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
+use \Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
+use Ecomprocessing\Helpers\TransactionsHelper;
 use Genesis\API\Constants\Payment\Methods;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
 use Genesis\API\Constants\Transaction\Types;
 
-class TransactionProcess extends \EComprocessing\Base\TransactionProcess
+class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 {
 
     /**
@@ -197,6 +197,22 @@ class TransactionProcess extends \EComprocessing\Base\TransactionProcess
                 'user_id' => $trustlyUserId
             );
             break;
+        case Types::ONLINE_BANKING_PAYIN:
+            $selectedBankCodes = array_filter(
+                Settings::getSelectedBankCodes(),
+                function ($value) {
+                    return $value != 'none';
+                }
+            );
+            if (\Genesis\Utils\Common::isValidArray($selectedBankCodes)) {
+                $parameters['bank_codes'] = array_map(
+                    function ($value) {
+                        return ['bank_code' => $value];
+                    },
+                    $selectedBankCodes
+                );
+            }
+            break;
         }
 
         return $parameters;
@@ -321,7 +337,7 @@ class TransactionProcess extends \EComprocessing\Base\TransactionProcess
         zen_redirect(
             zen_href_link(
                 FILENAME_CHECKOUT_PAYMENT,
-                'payment_error=EComprocessing_checkout',
+                'payment_error=Ecomprocessing_checkout',
                 'SSL'
             )
         );

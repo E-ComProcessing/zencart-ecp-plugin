@@ -21,25 +21,38 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Genesis\API\Request\Financial\Vouchers;
+namespace Genesis\API\Request\Financial\CashPayments;
 
+use Genesis\API\Constants\Transaction\Types;
+use Genesis\API\Request\Base\Financial;
 use Genesis\API\Traits\Request\AddressInfoAttributes;
+use Genesis\API\Traits\Request\DocumentAttributes;
 use Genesis\API\Traits\Request\Financial\AsyncAttributes;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
+use Genesis\Utils\Common as CommonUtils;
 
 /**
- * Class Paysafecard
+ * Class Pix
+ * @package Genesis\API\Request\Financial\CashPayments
  *
- * Paysafecard transactions are only asynchronous. After a successful validation of transaction parameters
- * transaction status is set to pending async the user is redirected to Paysafecard authentication page where
- * he enters additional information to finish the payment. When the payment reached a final state Genesis gateway
- * sends notification to merchant on the configured url into its account.
+ * Pix is a payment service created by the Central Bank of Brazil (BACEN),
+ * which represents a new way of receiving/sending money. Pix allows payments
+ * to be made instantly. The customer can pay bills, invoices, public utilities,
+ * transfer and receive credits in a facilitated manner, using only Pix keys (CPF/CNPJ).
  *
- * @package Genesis\API\Request\Financial\Vouchers
+ * @method string  getTransactionId()
+ * @method mixed   getAmount()
+ * @method string  getCurrency()
+ * @method string  getDocumentId()
+ * @method $this   setTransactionId($value)
+ * @method $this   setAmount($value)
+ * @method $this   setCurrency($value)
+ * @method $this   setDocumentId($documentId)
+ *
  */
-class Paysafecard extends \Genesis\API\Request\Base\Financial
+class Pix extends Financial
 {
-    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes;
+    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes, DocumentAttributes;
 
     /**
      * Returns the Request transaction type
@@ -47,7 +60,17 @@ class Paysafecard extends \Genesis\API\Request\Base\Financial
      */
     protected function getTransactionType()
     {
-        return \Genesis\API\Constants\Transaction\Types::PAYSAFECARD;
+        return Types::PIX;
+    }
+
+    /**
+     * Allowed Billing Countries
+     *
+     * @return array
+     */
+    protected function getAllowedBillingCountries()
+    {
+        return ['BR'];
     }
 
     /**
@@ -57,24 +80,31 @@ class Paysafecard extends \Genesis\API\Request\Base\Financial
      */
     protected function setRequiredFields()
     {
-        parent::setRequiredFields();
-
-        $requiredFieldValues = [
-            'billing_country' => [
-                'AU', 'AT', 'BE', 'BG', 'CA', 'HR', 'CY', 'CZ', 'DK', 'FI', 'FR',
-                'GE', 'DE', 'GI', 'GR', 'HU', 'IS', 'IE', 'IT', 'KW', 'LV', 'LI',
-                'LT', 'LU', 'MT', 'MX', 'MD', 'ME', 'NL', 'NZ', 'NO', 'PY', 'PE',
-                'PL', 'PT', 'RO', 'SA', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'AE',
-                'GB', 'US', 'UY'
-            ],
-            'currency'        => \Genesis\Utils\Currency::getList()
+        $requiredFields = [
+            'transaction_id',
+            'amount',
+            'currency',
+            'document_id',
+            'billing_first_name',
+            'billing_last_name'
         ];
 
-        $this->requiredFieldValues = \Genesis\Utils\Common::createArrayObject($requiredFieldValues);
+        $this->requiredFields = CommonUtils::createArrayObject($requiredFields);
+
+        $requiredFieldValues = [
+            'billing_country' => $this->getAllowedBillingCountries()
+        ];
+
+        $this->requiredFieldValues = CommonUtils::createArrayObject($requiredFieldValues);
+
+        $this->requiredFieldValuesConditional = CommonUtils::createArrayObject(
+            $this->getDocumentIdConditions()
+        );
     }
 
     /**
      * Return additional request attributes
+     *
      * @return array
      */
     protected function getPaymentTransactionStructure()
@@ -85,9 +115,9 @@ class Paysafecard extends \Genesis\API\Request\Base\Financial
             'amount'             => $this->transformAmount($this->amount, $this->currency),
             'currency'           => $this->currency,
             'customer_email'     => $this->customer_email,
-            'customer_phone'     => $this->customer_phone,
+            'document_id'        => $this->document_id,
             'billing_address'    => $this->getBillingAddressParamsStructure(),
-            'shipping_address'   => $this->getShippingAddressParamsStructure()
+            'shipping_address'   => $this->getShippingAddressParamsStructure(),
         ];
     }
 }

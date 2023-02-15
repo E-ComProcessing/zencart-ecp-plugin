@@ -17,14 +17,14 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Direct;
+namespace Ecomprocessing\Direct;
 
-use \EComprocessing\Common as EComprocessingCommon;
-use \EComprocessing\Direct\Settings as EComprocessingDirectSettings;
-use EComprocessing\Helpers\TransactionsHelper;
+use \Ecomprocessing\Common as EcomprocessingCommon;
+use \Ecomprocessing\Direct\Settings as EcomprocessingDirectSettings;
+use Ecomprocessing\Helpers\TransactionsHelper;
 use Genesis\API\Constants\Transaction\Types;
 
-class TransactionProcess extends \EComprocessing\Base\TransactionProcess
+class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 {
 
     /**

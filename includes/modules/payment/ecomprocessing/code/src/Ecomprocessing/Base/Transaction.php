@@ -17,7 +17,7 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Base;
+namespace Ecomprocessing\Base;
 
 use Genesis\API\Constants\Transaction\States as GenesisTransactionState;
 use Genesis\API\Constants\Transaction\Types;
@@ -304,7 +304,7 @@ class Transaction
             return self::isCustomAttributeBasedTransactionSelected(
                 METHOD_ACTION_CAPTURE,
                 $transaction['type'],
-                \EComprocessing\Checkout\Settings::getTransactionTypes()
+                \Ecomprocessing\Checkout\Settings::getTransactionTypes()
             );
         }
 
@@ -326,7 +326,7 @@ class Transaction
             return self::isCustomAttributeBasedTransactionSelected(
                 METHOD_ACTION_REFUND,
                 $transaction['type'],
-                \EComprocessing\Checkout\Settings::getTransactionTypes()
+                \Ecomprocessing\Checkout\Settings::getTransactionTypes()
             );
         }
 

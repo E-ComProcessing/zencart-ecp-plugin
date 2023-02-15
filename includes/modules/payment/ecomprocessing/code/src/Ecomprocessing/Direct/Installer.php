@@ -17,12 +17,12 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Direct;
+namespace Ecomprocessing\Direct;
 
-use \EComprocessing\Direct\Settings as EComprocessingDirectSettings;
-use \EComprocessing\Common          as EComprocessingCommon;
+use \Ecomprocessing\Direct\Settings as EcomprocessingDirectSettings;
+use \Ecomprocessing\Common          as EcomprocessingCommon;
 
-class Installer extends \EComprocessing\Base\Installer
+class Installer extends \Ecomprocessing\Base\Installer
 {
     /**
      * Transaction DatabaseTableName

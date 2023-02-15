@@ -17,12 +17,12 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Base;
+namespace Ecomprocessing\Base;
 
-use \EComprocessing\Common as EComprocessingCommon;
-use \EComprocessing\OrderTransactions as EComprocessingOrderTransactions;
-use \EComprocessing\Base\Transaction as EComprocessingTransactionBase;
-use \EComprocessing\Checkout\TransactionProcess as EComprocessingCheckoutTransactionProcess;
+use \Ecomprocessing\Common as EcomprocessingCommon;
+use \Ecomprocessing\OrderTransactions as EcomprocessingOrderTransactions;
+use \Ecomprocessing\Base\Transaction as EcomprocessingTransactionBase;
+use \Ecomprocessing\Checkout\TransactionProcess as EcomprocessingCheckoutTransactionProcess;
 
 abstract class PaymentMethod extends \base
 {

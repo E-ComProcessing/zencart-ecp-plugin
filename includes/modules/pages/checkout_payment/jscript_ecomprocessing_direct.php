@@ -17,14 +17,14 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-if (!class_exists('EComprocessing\Direct\TemplateManager')) {
+if (!class_exists('Ecomprocessing\Direct\TemplateManager')) {
     return;
 }
 
-if (\EComprocessing\Direct\Settings::getIsAvailableOnCheckoutPage() &&
-    \EComprocessing\Direct\Settings::getShouldUseIntegratedPaymentTemplate()
+if (\Ecomprocessing\Direct\Settings::getIsAvailableOnCheckoutPage() &&
+    \Ecomprocessing\Direct\Settings::getShouldUseIntegratedPaymentTemplate()
 ) {
-    echo \EComprocessing\Direct\TemplateManager::getCardJSContent(
+    echo \Ecomprocessing\Direct\TemplateManager::getCardJSContent(
         array(
             'form' => 'form[name="checkout_payment"]',
             'container' => '#payment-method-ecomprocessing-direct .card-wrapper',
@@ -41,5 +41,5 @@ if (\EComprocessing\Direct\Settings::getIsAvailableOnCheckoutPage() &&
         )
     );
 
-    echo \EComprocessing\Direct\TemplateManager::getCardStyleContent();
+    echo \Ecomprocessing\Direct\TemplateManager::getCardStyleContent();
 }

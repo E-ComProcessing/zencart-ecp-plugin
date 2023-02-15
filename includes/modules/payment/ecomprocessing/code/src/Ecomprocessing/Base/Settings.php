@@ -17,9 +17,9 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EComprocessing\Base;
+namespace Ecomprocessing\Base;
 
-use \EComprocessing\Common as EComprocessingCommon;
+use \Ecomprocessing\Common as EcomprocessingCommon;
 
 abstract class Settings
 {
