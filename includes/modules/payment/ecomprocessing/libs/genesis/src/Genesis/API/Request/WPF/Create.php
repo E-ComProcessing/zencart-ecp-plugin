@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -18,12 +18,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
+ * @author      emerchantpay
+ * @copyright   Copyright (C) 2015-2023 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 namespace Genesis\API\Request\WPF;
 
 use Genesis\API\Constants\i18n;
+use Genesis\API\Constants\Transaction\Parameters\ScaExemptions;
 use Genesis\API\Constants\Transaction\Types;
+use Genesis\API\Request\Base\Financial\Cards\CreditCard;
+use Genesis\API\Traits\Request\Financial\Cards\Recurring\RecurringTypeAttributes;
+use Genesis\API\Traits\Request\Financial\Cards\Recurring\RecurringCategoryAttributes;
 use Genesis\API\Traits\Request\Financial\PendingPaymentAttributes;
 use Genesis\API\Traits\Request\Financial\Business\BusinessAttributes;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
@@ -46,20 +52,23 @@ use Genesis\Utils\Common as CommonUtils;
  * @subpackage Request
  *
  * @codingStandardsIgnoreStart
- * @method $this  setTransactionId($value)   Set a Unique Transaction id
- * @method $this  setUsage($value)           Set the description of the transaction for later use
- * @method $this  setDescription($value)     Set a text describing the reason of the payment
- * @method $this  setReturnCancelUrl($value) Set the  URL where the customer is sent to after they cancel the payment
- * @method $this  setConsumerId($value)      Saved cards will be listed for user to select
- * @method string getTransactionId()         Identifier of the transaction
- * @method string getUsage()                 Statement, as it appears in the customer’s bank statement
- * @method string getDescription()           A text describing the reason of the payment
- * @method string getReturnCancelUrl()       URL where the customer is sent to after they cancel the payment
- * @method bool   getRememberCard()          Offer the user the option to save cardholder details for future use (tokenize)
- * @method string getConsumerId()            Check documentation section Consumers and Tokenization. Saved cards will be listed for user to select
- * @method string getLifetime()              Number of minutes determining how long the WPF will be valid
- * @method string getReminders()             Settings for reminders sending when using the ’Pay Later’ feature
- * @method bool   getScaPreference()         Signifies whether to perform SCA on the transaction
+ * @method $this  setTransactionId($value)    Set a Unique Transaction id
+ * @method $this  setUsage($value)            Set the description of the transaction for later use
+ * @method $this  setDescription($value)      Set a text describing the reason of the payment
+ * @method $this  setReturnCancelUrl($value)  Set the  URL where the customer is sent to after they cancel the payment
+ * @method $this  setConsumerId($value)       Saved cards will be listed for user to select
+ * @method $this  setWebPaymentFormId($value) The unique ID of the web payment form configuration to be displayed for the current payment.
+ * @method string getTransactionId()          Identifier of the transaction
+ * @method string getUsage()                  Statement, as it appears in the customer’s bank statement
+ * @method string getDescription()            A text describing the reason of the payment
+ * @method string getReturnCancelUrl()        URL where the customer is sent to after they cancel the payment
+ * @method bool   getRememberCard()           Offer the user the option to save cardholder details for future use (tokenize)
+ * @method string getConsumerId()             Check documentation section Consumers and Tokenization. Saved cards will be listed for user to select
+ * @method string getLifetime()               Number of minutes determining how long the WPF will be valid
+ * @method string getReminders()              Settings for reminders sending when using the ’Pay Later’ feature
+ * @method bool   getScaPreference()          Signifies whether to perform SCA on the transaction
+ * @method string getScaExemption()           Exemption for the Strong Customer Authentication. The allowed options are low_value, low_risk
+ * @method mixed  getWebPaymentFormId()       The unique ID of the web payment form configuration to be displayed for the current payment.
  * @codingStandardsIgnoreEnd
  *
  * @SuppressWarnings(PHPMD.LongVariable)
@@ -69,7 +78,7 @@ class Create extends \Genesis\API\Request
     use PaymentAttributes, AddressInfoAttributes, AsyncAttributes,
         NotificationAttributes, RiskAttributes, DescriptorAttributes,
         RestrictedSetter, BusinessAttributes, WpfThreedsV2Attributes,
-        PendingPaymentAttributes;
+        PendingPaymentAttributes, RecurringTypeAttributes, RecurringCategoryAttributes;
 
     const REMINDERS_CHANNEL_EMAIL      = 'email';
     const REMINDERS_CHANNEL_SMS        = 'sms';
@@ -177,6 +186,20 @@ class Create extends \Genesis\API\Request
      * @var bool $sca_preference
      */
     protected $sca_preference;
+
+    /**
+     * Exemption for the Strong Customer Authentication. The allowed options are low_value, low_risk
+     *
+     * @var string $sca_exemption
+     */
+    protected $sca_exemption;
+
+    /**
+     * The unique ID of the web payment form configuration to be displayed for the current payment.
+     *
+     * @var mixed $web_payment_form_id
+     */
+    protected $web_payment_form_id;
 
     /**
      * @param bool $flag
@@ -333,6 +356,32 @@ class Create extends \Genesis\API\Request
     public function setScaPreference($value)
     {
         $this->sca_preference = CommonUtils::toBoolean($value);
+
+        return $this;
+    }
+
+    /**
+     * Exemption for the Strong Customer Authentication. The allowed options are low_value, low_risk
+     *
+     * @param string $value
+     *
+     * @return $this
+     * @throws ErrorParameter
+     */
+    public function setScaExemption($value)
+    {
+        $scaExemptions = [ScaExemptions::EXEMPTION_LOW_VALUE, ScaExemptions::EXEMPTION_LOW_RISK];
+
+        if (!in_array($value, $scaExemptions)) {
+            throw new ErrorParameter(
+                sprintf(
+                    'Parameter Sca Exemption not valid! Use one of the following %s',
+                    implode(', ', $scaExemptions)
+                )
+            );
+        }
+
+        $this->sca_exemption = $value;
 
         return $this;
     }
@@ -547,13 +596,19 @@ class Create extends \Genesis\API\Request
     }
 
     /**
-     * Transaction Request with zero amount is allowed
+     * Return the required parameters keys which values could evaluate as empty
+     * Example value:
+     * array(
+     *     'class_property' => 'request_structure_key'
+     * )
      *
-     * @return bool
+     * @return array
      */
-    protected function allowedZeroAmount()
+    protected function allowedEmptyNotNullFields()
     {
-        return true;
+        return array(
+            'amount' => CreditCard::REQUEST_KEY_AMOUNT
+        );
     }
 
     /**
@@ -567,7 +622,6 @@ class Create extends \Genesis\API\Request
             'transaction_id',
             'amount',
             'currency',
-            'description',
             'notification_url',
             'return_success_url',
             'return_failure_url',
@@ -593,7 +647,8 @@ class Create extends \Genesis\API\Request
 
     protected function checkRequirements()
     {
-        $requiredFieldsValuesConditional = $this->getThreedsV2FieldValuesValidations();
+        $requiredFieldsValuesConditional = $this->getThreedsV2FieldValuesValidations() +
+            $this->requiredRecurringInitialTypesFieldValuesConditional();
 
         $this->requiredFieldValuesConditional = CommonUtils::createArrayObject($requiredFieldsValuesConditional);
 
@@ -642,7 +697,13 @@ class Create extends \Genesis\API\Request
                 'reminders'                 => $this->getRemindersStructure(),
                 'business_attributes'       => $this->getBusinessAttributesStructure(),
                 'sca_preference'            => $this->sca_preference,
-                'threeds_v2_params'         => $this->getThreedsV2ParamsStructure()
+                'sca_params'                => [
+                    'exemption' => $this->sca_exemption,
+                ],
+                'threeds_v2_params'         => $this->getThreedsV2ParamsStructure(),
+                'web_payment_form_id'       => $this->web_payment_form_id,
+                'recurring_type'            => $this->recurring_type,
+                'recurring_category'        => $this->recurring_category
             ]
         ];
 

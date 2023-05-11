@@ -21,6 +21,7 @@ namespace Ecomprocessing\Checkout;
 
 use \Ecomprocessing\Checkout\Settings as EcpCheckoutSettings;
 use \Ecomprocessing\Common            as EcomprocessingCommon;
+use Genesis\API\Constants\Transaction\Parameters\ScaExemptions;
 
 class Installer extends \Ecomprocessing\Base\Installer
 {
@@ -45,7 +46,7 @@ class Installer extends \Ecomprocessing\Base\Installer
         global $messageStack;
 
         if (EcpCheckoutSettings::getIsInstalled()) {
-            $messageStack->add_session('E-Comprocessing Checkout module already installed.', 'error');
+            $messageStack->add_session('ecomprocessing Checkout module already installed.', 'error');
             zen_redirect(zen_href_link(FILENAME_MODULES, 'set=payment&module=' . ECOMPROCESSING_CHECKOUT_CODE, 'NONSSL'));
             return 'failed';
         }
@@ -91,6 +92,8 @@ class Installer extends \Ecomprocessing\Base\Installer
         static::_addTransactionsConfigurationEntries();
         static::_addWpfConfigurationEntries();
         static::_addOrderConfigurationEntries();
+        static::_addThreedsOptions();
+        static::_addScaExemptionOptions();
     }
 
     /**
@@ -118,10 +121,10 @@ class Installer extends \Ecomprocessing\Base\Installer
             configuration_description, configuration_group_id, sort_order,
             set_function, use_function, date_added)
              values
-            ('Enable E-Comprocessing Checkout Module',
+            ('Enable ecomprocessing Checkout Module',
             '" . EcpCheckoutSettings::getCompleteSettingKey('STATUS') . "',
             'true',
-            'Do you want to process payments via E-Comprocessing''s Genesis Gateway?',
+            'Do you want to process payments via ecomprocessing''s Genesis Gateway?',
             '6', '3', 'ecp_zfg_draw_toggle(', 'ecp_zfg_get_toggle_value', now())"
         );
         $db->Execute(
@@ -199,7 +202,7 @@ class Installer extends \Ecomprocessing\Base\Installer
 
         $requiredOptionsAttributes = static::_getRequiredOptionsAttributes();
         $transaction_types
-            = EComprocessingCommon::buildSettingsDropDownOptions(
+            = EcomprocessingCommon::buildSettingsDropDownOptions(
                 EcpCheckoutSettings::getTransactionsList()
             );
 
@@ -207,7 +210,7 @@ class Installer extends \Ecomprocessing\Base\Installer
         $availableBankCodes
             = $placeholder + EcpCheckoutSettings::getAvailableBankCodes();
         $bank_codes
-            = EComprocessingCommon::buildSettingsDropDownOptions(
+            = EcomprocessingCommon::buildSettingsDropDownOptions(
                 $availableBankCodes
             );
 
@@ -292,7 +295,7 @@ class Installer extends \Ecomprocessing\Base\Installer
         global $db;
 
         $sortOrderAttributes = "array(''maxlength'' => ''3'')";
-        $languages           = EComprocessingCommon::buildSettingsDropDownOptions(
+        $languages           = EcomprocessingCommon::buildSettingsDropDownOptions(
             EcpCheckoutSettings::getAvailableCheckoutLanguages()
         );
 
@@ -413,6 +416,96 @@ class Installer extends \Ecomprocessing\Base\Installer
             '1', 'Set the status of canceled orders made with this payment module',
             '6', '0', 'ecp_zfg_pull_down_order_statuses(',
             'zen_get_order_status_name', now())"
+        );
+    }
+
+    /**
+     * Insert 3DSv2 options into DB
+     *
+     * @return void
+     */
+    private static function _addThreedsOptions()
+    {
+        global $db;
+
+        $challengeIndicators = EcomprocessingCommon::buildSettingsDropDownOptions(
+            EcpCheckoutSettings::getChallengeIndicators()
+        );
+
+        $db->Execute(
+            'insert into ' . TABLE_CONFIGURATION . "
+            (configuration_title, configuration_key, configuration_value,
+            configuration_description, configuration_group_id, sort_order,
+            set_function, use_function, date_added)
+            values
+            ('Enable 3DSv2',
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
+                'THREEDS_ALLOWED'
+            ) . "',
+            'true', 'Enable 3DSv2 optional parameters.',
+             '6', '4', 'ecp_zfg_draw_toggle(',
+            'ecp_zfg_get_toggle_value', now())"
+        );
+        $db->Execute(
+            'insert into ' . TABLE_CONFIGURATION . "
+            (configuration_title, configuration_key, configuration_value,
+            configuration_description, configuration_group_id, sort_order,
+            set_function, date_added)
+            values
+            ('3DSv2 Challenge',
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
+                'THREEDS_CHALLENGE_INDICATOR'
+            ) . "', 'no_preference', 
+            'The value has weight and might impact the decision whether a 
+            challenge will be required for the transaction or not.',
+             '6', '4', 'ecp_zfg_select_drop_down_single({$challengeIndicators},',
+              now())"
+        );
+    }
+
+    /**
+     * Insert SCA excemption options into DB
+     *
+     * @return void
+     */
+    private static function _addScaExemptionOptions()
+    {
+        global $db;
+
+        $scaExemptionOptions = EcomprocessingCommon::buildSettingsDropDownOptions(
+            [
+                ScaExemptions::EXEMPTION_LOW_RISK  => 'Low risk',
+                ScaExemptions::EXEMPTION_LOW_VALUE => 'Low value',
+            ]
+        );
+
+        $db->Execute(
+            'insert into ' . TABLE_CONFIGURATION . "
+            (configuration_title, configuration_key, configuration_value,
+            configuration_description, configuration_group_id, sort_order,
+            set_function, date_added)
+            values
+            ('SCA Exemption',
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
+                'SCA_EXEMPTION'
+            ) . "', '" . ScaExemptions::EXEMPTION_LOW_RISK . "', 
+            'Exemption for the Strong Customer Authentication.',
+             '6', '5', 'ecp_zfg_select_drop_down_single({$scaExemptionOptions},',
+              now())"
+        );
+        $db->Execute(
+            'insert into ' . TABLE_CONFIGURATION . "
+            (configuration_title, configuration_key, configuration_value,
+            configuration_description, configuration_group_id, sort_order,
+            set_function, date_added)
+            values
+            ('Exemption Amount',
+            '" . EcpCheckoutSettings::getCompleteSettingKey(
+                'SCA_EXEMPTION_AMOUNT'
+            ) . "',
+            '100', 'Exemption Amount determinate if the SCA Exemption should
+             be included in the request to the Gateway.',
+            '6', '6', 'ecp_zfg_draw_input(null, ', now())"
         );
     }
 

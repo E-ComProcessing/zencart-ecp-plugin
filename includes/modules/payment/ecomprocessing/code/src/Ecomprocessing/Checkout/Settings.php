@@ -25,6 +25,7 @@ use Genesis\API\Constants\Payment\Methods;
 use Genesis\API\Constants\Transaction\Names;
 use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
+use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\Control\ChallengeIndicators;
 use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
 use Genesis\API\Constants\Transaction\Types;
 
@@ -170,6 +171,10 @@ class Settings extends \Ecomprocessing\Base\Settings
         );
         $keys[] = static::getPrefix() . 'LANGUAGE';
         $keys[] = static::getPrefix() . 'WPF_TOKENIZATION';
+        $keys[] = static::getPrefix() . 'THREEDS_ALLOWED';
+        $keys[] = static::getPrefix() . 'THREEDS_CHALLENGE_INDICATOR';
+        $keys[] = static::getPrefix() . 'SCA_EXEMPTION';
+        $keys[] = static::getPrefix() . 'SCA_EXEMPTION_AMOUNT';
 
         return $keys;
     }
@@ -227,7 +232,43 @@ class Settings extends \Ecomprocessing\Base\Settings
     public static function getAvailableBankCodes()
     {
         return [
-            Banks::CPI => 'Interac Combined Pay-in'
+            Banks::CPI => 'Interac Combined Pay-in',
+            Banks::BCT => 'Bancontact',
         ];
+    }
+
+    /**
+     * List of available challenge indicators
+     *
+     * @return string[]
+     */
+    public static function getChallengeIndicators()
+    {
+        return [
+            ChallengeIndicators::NO_PREFERENCE          => 'No preference',
+            ChallengeIndicators::NO_CHALLENGE_REQUESTED => 'No challenge requested',
+            ChallengeIndicators::PREFERENCE             => 'Preference',
+            ChallengeIndicators::MANDATE                => 'Mandate'
+        ];
+    }
+
+    /**
+     * Get SCA Exemption value
+     *
+     * @return string
+     */
+    public static function getScaExemption()
+    {
+        return static::getSetting('SCA_EXEMPTION');
+    }
+
+    /**
+     * Get SCA Exemption amount
+     *
+     * @return float
+     */
+    public static function getScaExemptionAmount()
+    {
+        return max((float)static::getSetting('SCA_EXEMPTION_AMOUNT'), 0);
     }
 }

@@ -36,13 +36,6 @@ define(
     DB_PREFIX . 'ecomprocessing_checkout_consumers'
 );
 
-define('ECOMPROCESSING_DIRECT_CODE', 'ecomprocessing_direct');
-define('FILENAME_ECOMPROCESSING_DIRECT_IPN', 'ecomprocessing_direct_ipn');
-define('ECOMPROCESSING_DIRECT_SETTINGS_PREFIX', 'MODULE_PAYMENT_ECOMPROCESSING_DIRECT_');
-define(
-    'TABLE_ECOMPROCESSING_DIRECT_TRANSACTIONS',
-    DB_PREFIX . 'ecomprocessing_direct_transactions'
-);
 define('PPRO_TRANSACTION_SUFFIX', '_ppro');
 define('GOOGLE_PAY_TRANSACTION_PREFIX', 'google_pay_');
 define('GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE', 'authorize');

@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -18,6 +18,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
+ * @author      emerchantpay
+ * @copyright   Copyright (C) 2015-2023 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
@@ -25,8 +27,12 @@ namespace Genesis\API\Request\Financial\Alternatives;
 
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
 use Genesis\API\Traits\Request\Financial\AsyncAttributes;
+use Genesis\API\Traits\Request\Financial\BankAttributes;
 use Genesis\API\Traits\Request\AddressInfoAttributes;
 use Genesis\API\Constants\Payment\Methods as PaymentMethods;
+use Genesis\API\Validators\Request\RegexValidator;
+use Genesis\Exceptions\InvalidArgument;
+use Genesis\API\Traits\Request\Financial\PendingPaymentAttributes;
 use Genesis\Utils\Common as CommonUtils;
 
 /**
@@ -45,7 +51,7 @@ use Genesis\Utils\Common as CommonUtils;
  */
 class PPRO extends \Genesis\API\Request\Base\Financial
 {
-    use PaymentAttributes, AsyncAttributes, AddressInfoAttributes;
+    use PaymentAttributes, AsyncAttributes, AddressInfoAttributes, BankAttributes, PendingPaymentAttributes;
 
     /**
      * Used payment method
@@ -75,28 +81,6 @@ class PPRO extends \Genesis\API\Request\Base\Financial
      * @var string
      */
     protected $bank_code;
-
-    /**
-     * Must contain valid BIC, check:
-     *
-     * "PPRO Payment Method Requirements"
-     *
-     * in the official API documentation
-     *
-     * @var string
-     */
-    protected $bic;
-
-    /**
-     * Must contain valid IBAN, check:
-     *
-     * "PPRO Payment Method Requirements"
-     *
-     * in the official API documentation
-     *
-     * @var string
-     */
-    protected $iban;
 
     /**
      * Must contain valid phone number for destination account to pay out, check:
@@ -149,10 +133,6 @@ class PPRO extends \Genesis\API\Request\Base\Financial
 
         $requiredFieldsConditional = [
             'payment_type' => [
-                PaymentMethods::GIRO_PAY   => [
-                    'bic',
-                    'iban'
-                ],
                 PaymentMethods::PRZELEWY24 => [
                     'customer_email'
                 ]
@@ -187,16 +167,6 @@ class PPRO extends \Genesis\API\Request\Base\Financial
                             'AT', 'BE', 'BR', 'CL', 'CO', 'DE', 'EC', 'ES', 'MX', 'NL', 'PE', 'PR'
                         ],
                         'currency'        => ['EUR', 'USD']
-                    ]
-                ],
-                PaymentMethods::TRUST_PAY  => [
-                    [
-                        'billing_country' => 'CZ',
-                        'currency'        => 'CZK'
-                    ],
-                    [
-                        'billing_country' => ['CZ', 'SK'],
-                        'currency'        => 'EUR'
                     ]
                 ],
                 PaymentMethods::PRZELEWY24 => [
@@ -236,6 +206,29 @@ class PPRO extends \Genesis\API\Request\Base\Financial
     }
 
     /**
+     * Add iban conditional validation if it is present
+     *
+     * @return void
+     *
+     * @throws InvalidArgument
+     * @throws \Genesis\Exceptions\ErrorParameter
+     * @throws \Genesis\Exceptions\InvalidClassMethod
+     */
+    protected function checkRequirements()
+    {
+        if ($this->payment_type === PaymentMethods::GIRO_PAY) {
+            $this->requiredFieldValuesConditional = CommonUtils::createArrayObject(
+                array_merge(
+                    (array)$this->requiredFieldValuesConditional,
+                    $this->getIbanConditions()
+                )
+            );
+        }
+
+        parent::checkRequirements();
+    }
+
+    /**
      * Return additional request attributes
      * @return array
      */
@@ -247,6 +240,7 @@ class PPRO extends \Genesis\API\Request\Base\Financial
             'currency'           => $this->currency,
             'return_success_url' => $this->return_success_url,
             'return_failure_url' => $this->return_failure_url,
+            'return_pending_url' => $this->getReturnPendingUrl(),
             'customer_email'     => $this->customer_email,
             'customer_phone'     => $this->customer_phone,
             'account_number'     => $this->account_number,

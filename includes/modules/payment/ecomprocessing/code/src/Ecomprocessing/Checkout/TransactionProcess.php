@@ -21,6 +21,7 @@ namespace Ecomprocessing\Checkout;
 
 use \Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
 use \Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
+use Ecomprocessing\Helpers\ThreedsHelper;
 use Ecomprocessing\Helpers\TransactionsHelper;
 use Genesis\API\Constants\Payment\Methods;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
@@ -29,6 +30,7 @@ use Genesis\API\Constants\Transaction\Types;
 
 class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 {
+    const ORDER_CONTENT_TYPE_VIRTUAL = 'virtual';
 
     /**
      * Set Genesis Config Values (Ex. Login, Password, Token, etc)
@@ -37,17 +39,17 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
     {
         parent::doLoadGenesisPrivateConfigValues();
 
-        if (EComprocessingCheckoutSettings::getIsConfigured()) {
+        if (EcomprocessingCheckoutSettings::getIsConfigured()) {
             \Genesis\Config::setUsername(
-                EComprocessingCheckoutSettings::getUserName()
+                EcomprocessingCheckoutSettings::getUserName()
             );
 
             \Genesis\Config::setPassword(
-                EComprocessingCheckoutSettings::getPassword()
+                EcomprocessingCheckoutSettings::getPassword()
             );
 
             \Genesis\Config::setEnvironment(
-                EComprocessingCheckoutSettings::getIsLiveMode()
+                EcomprocessingCheckoutSettings::getIsLiveMode()
                     ? \Genesis\API\Constants\Environments::PRODUCTION
                     : \Genesis\API\Constants\Environments::STAGING
             );
@@ -67,8 +69,13 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         try {
             $genesis = new \Genesis\Genesis('WPF\Create');
 
-            $genesis
-                ->request()
+            /**
+             * Autocomplete helper comment
+             *
+             * @var \Genesis\API\Request\WPF\Create $request
+             */
+            $request = $genesis->request();
+            $request
                 ->setTransactionId($data->transaction_id)
                 ->setUsage(self::getUsage())
                 ->setDescription($data->description)
@@ -100,6 +107,17 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
             static::_addTransactionTypesToGatewayRequest($genesis, $data->order);
 
             static::setTokenizationData($genesis->request());
+
+            if (EcomprocessingCheckoutSettings::isThreedsAlowed()) {
+                static::_addThreedsData($genesis, $data);
+            }
+
+            $wpfAmount = (float)$request->getAmount();
+            if ($wpfAmount <= Settings::getScaExemptionAmount()) {
+                $request->setScaExemption(
+                    Settings::getScaExemption()
+                );
+            }
 
             $genesis->execute();
 
@@ -230,7 +248,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         $processedList = array();
         $aliasMap      = array();
 
-        $selectedTypes = EComprocessingCheckoutSettings::getTransactionTypes();
+        $selectedTypes = EcomprocessingCheckoutSettings::getTransactionTypes();
         $pproSuffix    = PPRO_TRANSACTION_SUFFIX;
         $methods       = Methods::getMethods();
 
@@ -315,7 +333,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
             $request->setConsumerId($consumer_id);
         }
 
-        if (EComprocessingCheckoutSettings::isWpfTokenizationEnabled()) {
+        if (EcomprocessingCheckoutSettings::isWpfTokenizationEnabled()) {
             $request->setRememberCard(true);
         }
     }
@@ -517,7 +535,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      */
     public static function setTerminalToken($reference_id)
     {
-        $transaction = EComprocessingCheckoutTransaction::getTransactionById(
+        $transaction = EcomprocessingCheckoutTransaction::getTransactionById(
             $reference_id
         );
 
@@ -570,5 +588,106 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         }
 
         return $result;
+    }
+
+    /**
+     * Add optional 3DSv2 parameters
+     *
+     * @param object $genesis Genesis request object
+     * @param object $data    Order data object
+     *
+     * @return void
+     *
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    private static function _addThreedsData($genesis, $data)
+    {
+        global $db;
+
+        $order         = $data->order;
+        $customerId    = self::getCustomerId();
+        $isVirtualCart = $order->content_type == self::ORDER_CONTENT_TYPE_VIRTUAL;
+
+        $customerInfo     = ThreedsHelper::getCustomerInfo($customerId, $db);
+        $customerOrders   = ThreedsHelper::getCustomerOrders($customerId, $db);
+        $ordersForPeriod  = ThreedsHelper::findNumberOfOrdersForPeriod(
+            $customerOrders
+        );
+
+        /**
+         * Autocomplete helper comment
+         *
+         * @var \Genesis\API\Request\WPF\Create $request
+         */
+        $request = $genesis->request();
+
+        $request
+            ->setThreedsV2ControlChallengeIndicator(
+                EcomprocessingCheckoutSettings::getChallengeIndicator()
+            )
+            ->setThreedsV2PurchaseCategory(
+                ThreedsHelper::getThreedsPurchaseCategory($isVirtualCart)
+            )
+            ->setThreedsV2MerchantRiskDeliveryTimeframe(
+                ThreedsHelper::getThreedsDeliveryTimeframe($isVirtualCart)
+            )
+            ->setThreedsV2MerchantRiskShippingIndicator(
+                ThreedsHelper::getShippingIndicator($data, $isVirtualCart)
+            )
+            ->setThreedsV2MerchantRiskReorderItemsIndicator(
+                ThreedsHelper::getReorderItemsIndicator(
+                    $customerId, $data->order->products, $db
+                )
+            )
+            ->setThreedsV2CardHolderAccountCreationDate(
+                $customerInfo['date_account_created']
+            )
+            ->setThreedsV2CardHolderAccountPasswordChangeDate(
+                $customerInfo['date_account_last_modified']
+            )
+            ->setThreedsV2CardHolderAccountPasswordChangeIndicator(
+                ThreedsHelper::getPasswordChangeIndicator(
+                    $customerInfo['date_account_last_modified']
+                )
+            )
+            ->setThreedsV2CardHolderAccountLastChangeDate(
+                $customerInfo['date_account_last_modified']
+            )
+            ->setThreedsV2CardHolderAccountUpdateIndicator(
+                ThreedsHelper::getUpdateIndicator($customerInfo)
+            )
+            ->setThreedsV2CardHolderAccountRegistrationDate(
+                ThreedsHelper::findFirstCustomerOrderDate($customerOrders)
+            )
+            ->setThreedsV2CardHolderAccountRegistrationIndicator(
+                ThreedsHelper::getRegistrationIndicator($customerOrders)
+            )
+            ->setThreedsV2CardHolderAccountTransactionsActivityLast24Hours(
+                $ordersForPeriod['last_24h']
+            )
+            ->setThreedsV2CardHolderAccountTransactionsActivityPreviousYear(
+                $ordersForPeriod['last_year']
+            )
+            ->setThreedsV2CardHolderAccountPurchasesCountLast6Months(
+                $ordersForPeriod['last_6m']
+            );
+
+        if (!$isVirtualCart) {
+            $shippingAddressDateFirstUsed
+                = ThreedsHelper::findShippingAddressDateFirstUsed(
+                    $data->order->delivery,
+                    $customerOrders
+                );
+
+            $request
+                ->setThreedsV2CardHolderAccountShippingAddressDateFirstUsed(
+                    $shippingAddressDateFirstUsed
+                )
+                ->setThreedsV2CardHolderAccountShippingAddressUsageIndicator(
+                    ThreedsHelper::getShippingAddressUsageIndicator(
+                        $shippingAddressDateFirstUsed
+                    )
+                );
+        }
     }
 }

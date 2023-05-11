@@ -40,12 +40,12 @@ class Notification extends \Ecomprocessing\Base\Notification
     {
         global $db;
 
-        if (!EComprocessingCheckoutSettings::getStatus()) {
+        if (!EcomprocessingCheckoutSettings::getStatus()) {
             exit(0);
         }
 
         parent::processNotification($requestData);
-        EComprocessingCheckoutTransactionProcess::bootstrap();
+        EcomprocessingCheckoutTransactionProcess::bootstrap();
 
         try {
             $notification = new \Genesis\API\Notification($requestData);
@@ -54,7 +54,7 @@ class Notification extends \Ecomprocessing\Base\Notification
                 $notification->initReconciliation();
 
                 $reconcile = $notification->getReconciliationObject();
-                $timestamp = EComprocessingCommon::formatTimeStamp($reconcile->timestamp);
+                $timestamp = EcomprocessingCommon::formatTimeStamp($reconcile->timestamp);
 
                 $data = array(
                     'unique_id' => $reconcile->unique_id,
@@ -64,15 +64,15 @@ class Notification extends \Ecomprocessing\Base\Notification
                     'timestamp' => $timestamp,
                 );
 
-                EComprocessingCheckoutTransaction::populateTransaction($data);
+                EcomprocessingCheckoutTransaction::populateTransaction($data);
 
 
                 if (isset($reconcile->payment_transaction)) {
                     $payment = $reconcile->payment_transaction;
 
-                    $timestamp = EComprocessingCommon::formatTimeStamp($payment->timestamp);
+                    $timestamp = EcomprocessingCommon::formatTimeStamp($payment->timestamp);
 
-                    $order_id = EComprocessingCheckoutTransaction:: getOrderByTransaction($reconcile->unique_id);
+                    $order_id = EcomprocessingCheckoutTransaction:: getOrderByTransaction($reconcile->unique_id);
 
                     $data = array(
                         'order_id'          => $order_id,
@@ -89,7 +89,7 @@ class Notification extends \Ecomprocessing\Base\Notification
                         'technical_message' => isset($payment->technical_message) ? $payment->technical_message : '',
                     );
 
-                    EComprocessingCheckoutTransaction::populateTransaction($data);
+                    EcomprocessingCheckoutTransaction::populateTransaction($data);
 
                     $orderQuery = $db->Execute("SELECT
                                                   `orders_id`, `orders_status`, `currency`, `currency_value`
@@ -104,22 +104,22 @@ class Notification extends \Ecomprocessing\Base\Notification
 
                     switch ($payment->status) {
                         case \Genesis\API\Constants\Transaction\States::APPROVED:
-                            $order_status_id = EComprocessingCheckoutSettings::getProcessedOrderStatusID();
+                            $order_status_id = EcomprocessingCheckoutSettings::getProcessedOrderStatusID();
                             break;
                         case \Genesis\API\Constants\Transaction\States::ERROR:
                         case \Genesis\API\Constants\Transaction\States::DECLINED:
-                            $order_status_id = EComprocessingCheckoutSettings::getFailedOrderStatusID();
+                            $order_status_id = EcomprocessingCheckoutSettings::getFailedOrderStatusID();
                             break;
                         default:
-                            $order_status_id = EComprocessingCheckoutSettings::getOrderStatusID();
+                            $order_status_id = EcomprocessingCheckoutSettings::getOrderStatusID();
                     }
 
-                    EComprocessingCheckoutTransaction::setOrderStatus(
+                    EcomprocessingCheckoutTransaction::setOrderStatus(
                         $order['orders_id'],
                         $order_status_id
                     );
 
-                    EComprocessingCheckoutTransaction::performOrderStatusHistory(
+                    EcomprocessingCheckoutTransaction::performOrderStatusHistory(
                         array(
                             'type'            => 'Notification',
                             'orders_id'       => $order['orders_id'],
@@ -132,7 +132,7 @@ class Notification extends \Ecomprocessing\Base\Notification
                         )
                     );
                 } else {
-                    $order_id = EComprocessingCheckoutTransaction::getOrderByTransaction($reconcile->unique_id);
+                    $order_id = EcomprocessingCheckoutTransaction::getOrderByTransaction($reconcile->unique_id);
 
                     $orderQuery = $db->Execute("SELECT
                                                   `orders_id`, `orders_status`, `currency`, `currency_value`
@@ -145,14 +145,14 @@ class Notification extends \Ecomprocessing\Base\Notification
 
                     $order = $orderQuery->fields;
 
-                    $order_status_id = EComprocessingCheckoutSettings::getFailedOrderStatusID();
+                    $order_status_id = EcomprocessingCheckoutSettings::getFailedOrderStatusID();
 
-                    EComprocessingCheckoutTransaction::setOrderStatus(
+                    EcomprocessingCheckoutTransaction::setOrderStatus(
                         $order['orders_id'],
                         $order_status_id
                     );
 
-                    EComprocessingCheckoutTransaction::performOrderStatusHistory(
+                    EcomprocessingCheckoutTransaction::performOrderStatusHistory(
                         array(
                             'type'            => 'Notification',
                             'orders_id'       => $order['orders_id'],
@@ -185,9 +185,9 @@ class Notification extends \Ecomprocessing\Base\Notification
         switch ($action) {
             case static::ACTION_CANCEL:
                 if (isset($_SESSION['order_summary']) && isset($_SESSION['order_summary']['order_number'])) {
-                    EComprocessingCheckoutTransaction::setOrderStatus(
+                    EcomprocessingCheckoutTransaction::setOrderStatus(
                         $_SESSION['order_summary']['order_number'],
-                        EComprocessingCheckoutSettings::getCanceledOrderStatusID()
+                        EcomprocessingCheckoutSettings::getCanceledOrderStatusID()
                     );
                 }
                 break;

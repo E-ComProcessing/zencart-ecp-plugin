@@ -53,7 +53,7 @@ abstract class Settings
             );
 
             if ($existingSettingItemArrayKey > -1) {
-                EComprocessingCommon::array_insert(
+                EcomprocessingCommon::array_insert(
                     $keys,
                     $existingSettingItemArrayKey + ($position == 'after' ? 1 : 0),
                     static::getCompleteSettingKey($newSettingItem)
@@ -305,5 +305,25 @@ abstract class Settings
     public static function isWpfTokenizationEnabled()
     {
         return static::getBoolSetting('WPF_TOKENIZATION');
+    }
+
+    /**
+     * Get 3DSv2 optional parameters allowed settings value
+     *
+     * @return bool
+     */
+    public static function isThreedsAlowed()
+    {
+        return static::getBoolSetting("THREEDS_ALLOWED");
+    }
+
+    /**
+     * Get 3DSv2 challenge indicator
+     *
+     * @return string
+     */
+    public static function getChallengeIndicator()
+    {
+         return static::getSetting('THREEDS_CHALLENGE_INDICATOR');
     }
 }

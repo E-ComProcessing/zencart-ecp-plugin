@@ -302,7 +302,7 @@ class Ecomprocessing_checkout extends \Ecomprocessing\Base\PaymentMethod
     public function __construct()
     {
         $this->code = ECOMPROCESSING_CHECKOUT_CODE;
-        $this->version = "1.1.10";
+        $this->version = "1.2.1";
         parent::__construct();
     }
 
@@ -458,14 +458,12 @@ class Ecomprocessing_checkout extends \Ecomprocessing\Base\PaymentMethod
         }
     }
 
-	/**
-	 * Build admin-page components
-	 *
-	 * @param int $zf_order_id
-	 *
-	 * @return string
-	 * @throws Exception
-	 */
+    /**
+     * Build admin-page components
+     *
+     * @param int $zf_order_id
+     * @return string
+     */
     public function admin_notification($zf_order_id)
     {
         if (EcomprocessingCheckoutSettings::getIsInstalled()) {

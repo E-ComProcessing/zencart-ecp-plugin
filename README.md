@@ -6,9 +6,8 @@ This is a Payment Module for Zen Cart, that gives you the ability to process pay
 Requirements
 ------------
 
-* Zen Cart 1.5.x(Tested up to 1.5.7d)
-* [GenesisPHP v1.21.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.0) - (Integrated in Module)
-* PCI-certified server in order to use ```E-Comprocessing Direct```
+* Zen Cart 1.5.x(Tested up to 1.5.8)
+* [GenesisPHP v1.21.6](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.6) - (Integrated in Module)
 
 GenesisPHP Requirements
 ------------
@@ -28,17 +27,11 @@ Installation (Manual)
 * Upload the contents of folder (excluding ```README.md``` and ```YOUR_ADMIN```) to the ```<root>``` folder of your Zen Cart installation
 * Upload the contents of folder ```YOUR_ADMIN``` to your ```<admin>``` folder of your Zen Cart installation
 * Log into ```Zen Cart Administration Area``` with your Administrator account
-* Go to ```Modules``` -> ```Payment``` -> Locate ```E-Comprocessing Checkout``` or ```E-Comprocessing Direct``` Module and click ```Install```
+* Go to ```Modules``` -> ```Payment``` -> Locate ```E-Comprocessing Checkout``` Module and click ```Install```
 * Click ```Edit```, enter your credentials and configure the plugin to your needs
 
 Supported Transactions & Payment Methods
 ---------------------
-* ```E-Comprocessing Direct``` Payment Method
-  * __Authorize__
-  * __Authorize (3D-Secure)__
-  * __Sale__
-  * __Sale (3D-Secure)__
-
 * ```E-Comprocessing Checkout``` Payment Method
   * __Apple Pay__
   * __Argencard__
@@ -81,6 +74,7 @@ Supported Transactions & Payment Methods
   * __Neteller__
   * __Online Banking__
     * __Interac Combined Pay-in (CPI)__
+    * __Bancontact (BTC)__
   * __OXXO__
   * __P24__
   * __Pago Facil__

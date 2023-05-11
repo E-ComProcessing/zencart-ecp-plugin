@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -18,17 +18,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
+ * @author      emerchantpay
+ * @copyright   Copyright (C) 2015-2023 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
 namespace Genesis\API\Traits\Request\Financial;
 
+use Genesis\API\Validators\Request\RegexValidator;
 use Genesis\Exceptions\ErrorParameter;
 
 /**
  * Trait BankAttributes
+ *
  * @package Genesis\API\Traits\Request\Financial
  *
+ * @method string getBic() Valid BIC string. Must be 8 or 11 characters long
+ * @method string getIban() String must start with "DE" followed by 20 digits
+ * @method $this  setIban($value) String must start with "DE" followed by 20 digits
  */
 trait BankAttributes
 {
@@ -66,6 +73,12 @@ trait BankAttributes
      */
     public function setBic($value)
     {
+        if (empty($value)) {
+            $this->bic = null;
+
+            return $this;
+        }
+
         if (in_array(strlen($value), $this->getAllowedBicSizes()) === false) {
             throw new ErrorParameter(
                 'Bic must be with one of these lengths: ' . implode(', ', $this->getAllowedBicSizes())
@@ -75,5 +88,21 @@ trait BankAttributes
         $this->bic = $value;
 
         return $this;
+    }
+
+    /**
+     * Return conditional iban validation rule
+     *
+     * @return array
+     */
+    protected function getIbanConditions()
+    {
+        return [
+            'iban' => [
+                $this->iban => [
+                    ['iban' => new RegexValidator(RegexValidator::PATTERN_DE_IBAN)]
+                ]
+            ],
+        ];
     }
 }

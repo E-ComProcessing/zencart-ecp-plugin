@@ -162,7 +162,7 @@ abstract class PaymentMethod extends \base
             $data = new \stdClass();
             $data->reference_id = $_POST['reference_id'];
             $data->usage = $_POST['message'];
-            $data->remote_address = EComprocessingCommon::getServerRemoteAddress();
+            $data->remote_address = EcomprocessingCommon::getServerRemoteAddress();
 
             if ($transaction_type != \Genesis\API\Constants\Transaction\Types::VOID) {
                 $data->amount = $_POST['amount'];
@@ -182,7 +182,7 @@ abstract class PaymentMethod extends \base
             );
 
             if (isset($responseObject->unique_id)) {
-                $timestamp = EComprocessingCommon::formatTimeStamp($responseObject->timestamp);
+                $timestamp = EcomprocessingCommon::formatTimeStamp($responseObject->timestamp);
 
                 if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
                     $messageStack->add_session($responseObject->message, 'success');
@@ -325,7 +325,7 @@ abstract class PaymentMethod extends \base
         global $insert_id;
 
         if (isset($this->responseObject) && isset($this->responseObject->unique_id)) {
-            $timestamp = EComprocessingCommon::formatTimeStamp($this->responseObject->timestamp);
+            $timestamp = EcomprocessingCommon::formatTimeStamp($this->responseObject->timestamp);
 
             $data = array(
                 'type' => ($this->responseObject->transaction_type ?: 'checkout'),
@@ -388,7 +388,7 @@ abstract class PaymentMethod extends \base
             'css' => 'includes/css/ecomprocessing/'
         );
 
-        $currency = EComprocessingCommon::getZenCurrency($order->info['currency']);
+        $currency = EcomprocessingCommon::getZenCurrency($order->info['currency']);
 
         if ($currency === false) {
             return;
@@ -414,7 +414,7 @@ abstract class PaymentMethod extends \base
         foreach ($transactions as &$transaction) {
             $transaction['timestamp'] = date('H:i:s m/d/Y', strtotime($transaction['timestamp']));
 
-            if (EComprocessingTransactionBase::getCanCaptureTransaction($transaction)) {
+            if (EcomprocessingTransactionBase::getCanCaptureTransaction($transaction)) {
                 $transaction['can_capture'] = true;
             } else {
                 $transaction['can_capture'] = false;
@@ -442,7 +442,7 @@ abstract class PaymentMethod extends \base
                 $transaction['available_amount'] = $totalAuthorizedAmount - $totalCapturedAmount;
             }
 
-            if (EComprocessingTransactionBase::getCanRefundTransaction($transaction)) {
+            if (EcomprocessingTransactionBase::getCanRefundTransaction($transaction)) {
                 $transaction['can_refund'] = true;
             } else {
                 $transaction['can_refund'] = false;
@@ -459,7 +459,7 @@ abstract class PaymentMethod extends \base
                 $transaction['available_amount'] = $totalCapturedAmount - $totalRefundedAmount;
             }
 
-            if (EComprocessingTransactionBase::getCanVoidTransaction($transaction)) {
+            if (EcomprocessingTransactionBase::getCanVoidTransaction($transaction)) {
                 $transaction['can_void'] = true;
                 $transaction['void_exists'] = $this->getTransactionsByTypeAndStatus(
                     $transaction['order_id'],
@@ -475,12 +475,12 @@ abstract class PaymentMethod extends \base
                 $transaction['available_amount'] = $transaction['amount'];
             }
 
-            $transaction['amount'] = EComprocessingCommon::formatTransactionValue(
+            $transaction['amount'] = EcomprocessingCommon::formatTransactionValue(
                 $transaction['amount'],
                 $currency
             );
 
-            $transaction['available_amount'] = EComprocessingCommon::formatTransactionValue(
+            $transaction['available_amount'] = EcomprocessingCommon::formatTransactionValue(
                 $transaction['available_amount'],
                 $currency
             );
@@ -529,12 +529,12 @@ abstract class PaymentMethod extends \base
                 continue;
             }
 
-            EComprocessingCommon::sortTransactionByRelation($transactions, $val, $array_asc);
+            EcomprocessingCommon::sortTransactionByRelation($transactions, $val, $array_asc);
         }
 
         $data->transactions = $transactions;
 
-        return EComprocessingOrderTransactions::printOrderTransactions($data);
+        return EcomprocessingOrderTransactions::printOrderTransactions($data);
     }
 
     /**

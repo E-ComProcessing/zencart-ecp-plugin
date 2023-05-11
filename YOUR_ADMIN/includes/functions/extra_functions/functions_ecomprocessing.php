@@ -176,10 +176,7 @@ function ecp_get_is_payment_module_index_action()
         isset($_GET['set']) &&
         isset($_GET['module']) &&
         (strtolower($_GET['set']) == 'payment') &&
-        (
-            (strtolower($_GET['module']) == ECOMPROCESSING_CHECKOUT_CODE) ||
-            (strtolower($_GET['module']) == ECOMPROCESSING_DIRECT_CODE)
-        );
+        (strtolower($_GET['module']) == ECOMPROCESSING_CHECKOUT_CODE);
 }
 
 /**
