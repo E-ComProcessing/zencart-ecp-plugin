@@ -46,7 +46,7 @@ class Installer extends \Ecomprocessing\Base\Installer
         global $messageStack;
 
         if (EcpCheckoutSettings::getIsInstalled()) {
-            $messageStack->add_session('ecomprocessing Checkout module already installed.', 'error');
+            $messageStack->add_session('E-Comprocessing Checkout module already installed.', 'error');
             zen_redirect(zen_href_link(FILENAME_MODULES, 'set=payment&module=' . ECOMPROCESSING_CHECKOUT_CODE, 'NONSSL'));
             return 'failed';
         }
@@ -121,7 +121,7 @@ class Installer extends \Ecomprocessing\Base\Installer
             configuration_description, configuration_group_id, sort_order,
             set_function, use_function, date_added)
              values
-            ('Enable ecomprocessing Checkout Module',
+            ('Enable E-Comprocessing Checkout Module',
             '" . EcpCheckoutSettings::getCompleteSettingKey('STATUS') . "',
             'true',
             'Do you want to process payments via ecomprocessing''s Genesis Gateway?',

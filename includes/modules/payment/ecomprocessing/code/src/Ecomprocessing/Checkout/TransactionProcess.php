@@ -231,6 +231,15 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
                 );
             }
             break;
+        case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
+            $userId = static::getCustomerId();
+            $customerId = empty($userId) ?
+                static::getCurrentUserIdHash() : $userId;
+
+            $parameters = array(
+                'customer_id' => $customerId
+            );
+            break;
         }
 
         return $parameters;
@@ -249,6 +258,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         $aliasMap      = array();
 
         $selectedTypes = EcomprocessingCheckoutSettings::getTransactionTypes();
+
         $pproSuffix    = PPRO_TRANSACTION_SUFFIX;
         $methods       = Methods::getMethods();
 

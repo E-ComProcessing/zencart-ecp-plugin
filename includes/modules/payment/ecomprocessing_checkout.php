@@ -27,6 +27,12 @@ use \Ecomprocessing\Checkout\Notification       as EcomprocessingCheckoutNotific
 
 class Ecomprocessing_checkout extends \Ecomprocessing\Base\PaymentMethod
 {
+    /**
+     * Check if the module is installed
+     *
+     * @var bool
+     */
+    protected $_check;
 
     /**
      * Generate Reference Transaction (Capture, Refund, Void)
@@ -302,7 +308,7 @@ class Ecomprocessing_checkout extends \Ecomprocessing\Base\PaymentMethod
     public function __construct()
     {
         $this->code = ECOMPROCESSING_CHECKOUT_CODE;
-        $this->version = "1.2.1";
+        $this->version = "1.2.5";
         parent::__construct();
     }
 

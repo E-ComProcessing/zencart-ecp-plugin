@@ -29,13 +29,15 @@ use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes a
 use Genesis\API\Constants\Transaction\Types as TransactionType;
 use Genesis\API\Request\Base\Financial;
 use Genesis\API\Traits\Request\DocumentAttributes;
+use Genesis\API\Traits\Request\Financial\AsyncAttributes;
 use Genesis\API\Traits\Request\Financial\BirthDateAttributes;
 use Genesis\API\Traits\Request\AddressInfoAttributes;
 use Genesis\API\Traits\Request\Financial\Business\BusinessAttributes;
 use Genesis\API\Traits\Request\Financial\DescriptorAttributes;
+use Genesis\API\Traits\Request\Financial\NotificationAttributes;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
+use Genesis\API\Traits\Request\Financial\Threeds\V2\AllAttributes as AllThreedsV2Attributes;
 use Genesis\API\Traits\Request\Mobile\GooglePayAttributes;
-use Genesis\API\Traits\RestrictedSetter;
 use Genesis\Exceptions\InvalidArgument;
 use Genesis\Utils\Common as CommonUtils;
 use Genesis\Utils\Currency;
@@ -49,9 +51,9 @@ use Genesis\Utils\Currency;
  */
 class GooglePay extends Financial
 {
-    use AddressInfoAttributes, PaymentAttributes, GooglePayAttributes, RestrictedSetter,
+    use AddressInfoAttributes, PaymentAttributes, GooglePayAttributes,
         BirthDateAttributes, BusinessAttributes, DocumentAttributes,
-        DescriptorAttributes;
+        DescriptorAttributes, AllThreedsV2Attributes, NotificationAttributes, AsyncAttributes;
 
     /**
      * Used in Google token for signatures array
@@ -108,6 +110,11 @@ class GooglePay extends Financial
             'payment_subtype' => GooglePaySubtypes::getAllowedPaymentTypes(),
         ];
         $this->requiredFieldValues = CommonUtils::createArrayObject($requiredFieldValues);
+
+        $requiredFieldsConditional       = $this->requiredThreedsV2DeviceTypeConditional();
+        $this->requiredFieldsConditional = CommonUtils::createArrayObject(
+            $requiredFieldsConditional
+        );
     }
 
     /**
@@ -120,11 +127,16 @@ class GooglePay extends Financial
      */
     protected function checkRequirements()
     {
+        $requiredFieldsValuesConditional = $this->getThreedsV2FieldValuesValidations();
+
         if ($this->document_id) {
-            $this->requiredFieldValuesConditional = CommonUtils::createArrayObject(
+            $requiredFieldsValuesConditional = array_merge_recursive(
+                $requiredFieldsValuesConditional,
                 $this->getDocumentIdConditions()
             );
         }
+
+        $this->requiredFieldValuesConditional = CommonUtils::createArrayObject($requiredFieldsValuesConditional);
 
         parent::checkRequirements();
     }
@@ -146,12 +158,32 @@ class GooglePay extends Financial
             'customer_email'            => $this->customer_email,
             'customer_phone'            => $this->customer_phone,
             'birth_date'                => $this->getBirthDate(),
+            'notification_url'          => $this->notification_url,
+            'return_success_url'        => $this->return_success_url,
+            'return_failure_url'        => $this->return_failure_url,
             'billing_address'           => $this->getBillingAddressParamsStructure(),
             'shipping_address'          => $this->getShippingAddressParamsStructure(),
             'business_attributes'       => $this->getBusinessAttributesStructure(),
             'dynamic_descriptor_params' => $this->getDynamicDescriptorParamsStructure(),
             'document_id'               => $this->document_id,
+            'threeds_v2_params'         => $this->getThreedsV2ParamsStructure(),
         ];
+    }
+
+    /**
+     * Return the required parameters keys which values could evaluate as empty
+     * Example value:
+     * array(
+     *     'class_property' => 'request_structure_key'
+     * )
+     *
+     * @return array
+     */
+    protected function allowedEmptyNotNullFields()
+    {
+        return array(
+                'threeds_v2_browser_time_zone_offset' => 'time_zone_offset'
+        );
     }
 
     /**

@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Zen Cart 1.5.x(Tested up to 1.5.8)
-* [GenesisPHP v1.21.6](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.6) - (Integrated in Module)
+* [GenesisPHP v1.24.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.24.0) - (Integrated in Module)
 
 GenesisPHP Requirements
 ------------
@@ -75,6 +75,7 @@ Supported Transactions & Payment Methods
   * __Online Banking__
     * __Interac Combined Pay-in (CPI)__
     * __Bancontact (BTC)__
+    * __Blik One Click (BLK)__
   * __OXXO__
   * __P24__
   * __Pago Facil__
