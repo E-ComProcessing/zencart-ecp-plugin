@@ -17,14 +17,16 @@
 
     var pluses = /\+/g;
 
-    function decode(s) {
+    function decode(s)
+    {
         if (config.raw) {
             return s;
         }
         return decodeURIComponent(s.replace(pluses, ' '));
     }
 
-    function decodeAndParse(s) {
+    function decodeAndParse(s)
+    {
         if (s.indexOf('"') === 0) {
             // This is a quoted cookie as according to RFC2068, unescape...
             s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
@@ -34,7 +36,8 @@
 
         try {
             return config.json ? JSON.parse(s) : s;
-        } catch(e) {}
+        } catch (e) {
+        }
     }
 
     var config = $.cookie = function (key, value, options) {

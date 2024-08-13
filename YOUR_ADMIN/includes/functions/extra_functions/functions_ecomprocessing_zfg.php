@@ -17,7 +17,9 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-if (!defined('IS_ADMIN_FLAG')) die('Illegal Access');
+if (!defined('IS_ADMIN_FLAG')) {
+    die('Illegal Access');
+}
 
 /**
  * Prints Multi Select HTML Bootstrap Control
@@ -57,10 +59,12 @@ function ecp_zfg_pull_down_order_statuses($order_status_id, $key = '')
 {
     global $db;
 
+    $lang_id = \Ecomprocessing\Helpers\SessionHelper::get('languages_id');
+
     $statuses_array = array(array('id' => '0', 'text' => TEXT_DEFAULT));
     $statuses = $db->Execute("select orders_status_id, orders_status_name
                               from " . TABLE_ORDERS_STATUS . "
-                              where language_id = '" . (int)$_SESSION['languages_id'] . "'
+                              where language_id = '" . (int)$lang_id . "'
                               order by orders_status_id");
 
     while (!$statuses->EOF) {
@@ -93,6 +97,7 @@ function ecp_zfg_select_drop_down_single($select_array, $key_value, $key = '')
  * @param string $parameters
  * @param bool $required
  * @return string
+ * @SuppressWarnings(PHPMD.Superglobals)
  */
 function ecp_zfg_draw_pull_down_menu($name, $values, $default = '', $parameters = '', $required = false)
 {
@@ -112,7 +117,7 @@ function ecp_zfg_draw_pull_down_menu($name, $values, $default = '', $parameters 
         $default = explode(", ", $default);
     }
 
-    for ($i=0, $n=sizeof($values); $i<$n; $i++) {
+    for ($i = 0, $n = sizeof($values); $i < $n; $i++) {
         $field .= '<option value="' . zen_output_string($values[$i]['id']) . '"';
         if (in_array($values[$i]['id'], $default)) {
             $field .= ' selected="selected"';

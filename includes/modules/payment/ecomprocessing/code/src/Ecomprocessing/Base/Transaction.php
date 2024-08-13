@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,17 +20,16 @@
 
 namespace Ecomprocessing\Base;
 
-use Genesis\API\Constants\Transaction\States as GenesisTransactionState;
-use Genesis\API\Constants\Transaction\Types;
+use Genesis\Api\Constants\Transaction\States as GenesisTransactionState;
+use Genesis\Api\Constants\Transaction\Types;
 
 class Transaction
 {
-
     /**
      * Transaction DatabaseTableName
      * @var string
      */
-    static protected $table_name = null;
+    protected static $table_name = null;
 
     /**
      * Get Order Id By Genesis Unique Id
@@ -72,7 +72,7 @@ class Transaction
     }
 
     /**
-     * Get the sum of the ammount for a list of transaction types and status
+     * Get the sum of the amount for a list of transaction types and status
      * @param int $order_id
      * @param string $reference_id
      * @param array $types
@@ -128,8 +128,7 @@ class Transaction
             return $transactions;
         }
 
-        return false;
-
+        return [];
     }
 
     /**
@@ -169,8 +168,8 @@ class Transaction
 
         try {
             $fields = implode(', ', array_map(
-                function ($v, $k) {
-                    return sprintf('`%s`', $k);
+                function ($val, $key) {
+                    return sprintf('`%s`', $key);
                 },
                 $data,
                 array_keys(
@@ -179,8 +178,8 @@ class Transaction
             ));
 
             $values = implode(', ', array_map(
-                function ($v) {
-                    return sprintf("'%s'", $v);
+                function ($val) {
+                    return sprintf("'%s'", $val);
                 },
                 $data,
                 array_keys(
@@ -210,8 +209,8 @@ class Transaction
 
         try {
             $fields = implode(', ', array_map(
-                function ($v, $k) {
-                    return sprintf("`%s` = '%s'", $k, $v);
+                function ($val, $key) {
+                    return sprintf("`%s` = '%s'", $key, $val);
                 },
                 $data,
                 array_keys(
@@ -276,9 +275,9 @@ class Transaction
             'customer_notified' => '1',
             'comments'          =>
                 sprintf(
-                    "[{$data['type']}]" .  PHP_EOL .
+                    "[{$data['type']}]" . PHP_EOL .
                     "- Unique ID: %s" . PHP_EOL .
-                    "- Status: %s".     PHP_EOL .
+                    "- Status: %s" . PHP_EOL .
                     "- Message: %s",
                     $data['payment']['unique_id'],
                     $data['payment']['status'],
@@ -372,6 +371,7 @@ class Transaction
      * @param array  $selectedTypes   Selected transaction types into the config
      *
      * @return boolean
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public static function isCustomAttributeBasedTransactionSelected(
         $action,
@@ -379,68 +379,68 @@ class Transaction
         $selectedTypes
     ) {
         switch ($transactionType) {
-        case Types::GOOGLE_PAY:
-            if (METHOD_ACTION_CAPTURE === $action) {
-                return in_array(
-                    GOOGLE_PAY_TRANSACTION_PREFIX .
-                    GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE,
-                    $selectedTypes,
-                    true
-                );
-            }
+            case Types::GOOGLE_PAY:
+                if (METHOD_ACTION_CAPTURE === $action) {
+                    return in_array(
+                        GOOGLE_PAY_TRANSACTION_PREFIX .
+                        GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE,
+                        $selectedTypes,
+                        true
+                    );
+                }
 
-            if (METHOD_ACTION_REFUND === $action) {
-                return in_array(
-                    GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_SALE,
-                    $selectedTypes,
-                    true
-                );
-            }
-            break;
-        case Types::PAY_PAL:
-            if (METHOD_ACTION_CAPTURE === $action) {
-                return in_array(
-                    PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_AUTHORIZE,
-                    $selectedTypes,
-                    true
-                );
-            }
+                if (METHOD_ACTION_REFUND === $action) {
+                    return in_array(
+                        GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_SALE,
+                        $selectedTypes,
+                        true
+                    );
+                }
+                break;
+            case Types::PAY_PAL:
+                if (METHOD_ACTION_CAPTURE === $action) {
+                    return in_array(
+                        PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_AUTHORIZE,
+                        $selectedTypes,
+                        true
+                    );
+                }
 
-            if (METHOD_ACTION_REFUND === $action) {
-                $refundableTypes = [
+                if (METHOD_ACTION_REFUND === $action) {
+                    $refundableTypes = [
                     PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_SALE,
                     PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_EXPRESS,
-                ];
+                    ];
 
-                return (
-                    count(
-                        array_intersect(
-                            $refundableTypes,
-                            $selectedTypes
-                        )
-                    ) > 0
-                );
-            }
-            break;
-        case Types::APPLE_PAY:
-            if (METHOD_ACTION_CAPTURE === $action) {
-                return in_array(
-                    APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_AUTHORIZE,
-                    $selectedTypes,
-                    true
-                );
-            }
+                    return (
+                        count(
+                            array_intersect(
+                                $refundableTypes,
+                                $selectedTypes
+                            )
+                        ) > 0
+                    );
+                }
+                break;
+            case Types::APPLE_PAY:
+                if (METHOD_ACTION_CAPTURE === $action) {
+                    return in_array(
+                        APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_AUTHORIZE,
+                        $selectedTypes,
+                        true
+                    );
+                }
 
-            if (METHOD_ACTION_REFUND === $action) {
-                return in_array(
-                    APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_SALE,
-                    $selectedTypes,
-                    true
-                );
-            }
-            break;
-        default:
-            return false;
+                if (METHOD_ACTION_REFUND === $action) {
+                    return in_array(
+                        APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_SALE,
+                        $selectedTypes,
+                        true
+                    );
+                }
+                break;
+            default:
+                return false;
         }
 
         return false;
@@ -477,6 +477,5 @@ class Transaction
         $db->Execute("UPDATE " . TABLE_ORDERS . "
                       SET `orders_status` = '" . abs(intval($orderStatusId)) . "', `last_modified` = NOW()
                       WHERE `orders_id` = '" . abs(intval($orderId)) . "'");
-
     }
 }

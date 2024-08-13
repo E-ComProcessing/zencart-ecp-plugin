@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -23,10 +24,9 @@ class OrderTransactions
 {
     /**
      * Build HTML with the additional resources to load on the OrderAdmin Page
-     * @param \stdClass $data
      * @return string
      */
-    private static function getResourcesHtml($data)
+    private static function getResourcesHtml()
     {
         $zenCartVersion = ecp_get_zencart_version();
         $html = "";
@@ -60,6 +60,8 @@ class OrderTransactions
      * Build HTML for the Order Admin PAge
      * @param \stdClass $data
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private static function getHTML($data)
     {
@@ -70,7 +72,8 @@ class OrderTransactions
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <a data-toggle="<?php echo $module_name;?>-collapse" data-target="#transactionsTable" href="javascript:void(1);">
+                            <a data-toggle="<?php echo $module_name;?>-collapse" data-target="#transactionsTable"
+                               href="javascript:void(1);">
                                 <span class="ecomprocessing-logo">
                                     <?php echo $data->translations['panel']['title']; ?>
                                 </span>
@@ -99,7 +102,10 @@ class OrderTransactions
 
                             <tbody>
                             <?php foreach ($data->transactions as $transaction) { ?>
-                                <tr class="treegrid-<?php echo $transaction['unique_id'];?> <?php if(strlen($transaction['reference_id']) > 1): ?> treegrid-parent-<?php echo $transaction['reference_id'];?> <?php endif;?>">
+                                <tr class="treegrid-<?php echo $transaction['unique_id'];?>
+                                    <?php if (strlen($transaction['reference_id']) > 1) : ?>
+                                        treegrid-parent-<?php echo $transaction['reference_id'];?>
+                                    <?php endif;?>">
                                     <td class="text-left">
                                         <?php echo $transaction['unique_id'];?>
                                     </td>
@@ -124,10 +130,11 @@ class OrderTransactions
                                     <td class="text-center">
                                         <?php if ($transaction['can_capture']) { ?>
                                             <div class="transaction-action-button">
-                                                <a class="button btn btn-transaction btn-success" id="button-capture" role="button"
-                                                   data-post-action="doCapture"
-                                                   data-toggle="<?php echo $module_name;?>-tooltip" data-placement="bottom"
-                                                   data-title="<?php echo $data->translations['modal']['capture']['title'];?>"
+                                                <a class="button btn btn-transaction btn-success" id="button-capture"
+                                                   role="button" data-post-action="doCapture" data-placement="bottom"
+                                                   data-toggle="<?php echo $module_name;?>-tooltip"
+                                                   data-title="<?php
+                                                     echo $data->translations['modal']['capture']['title']; ?>"
                                                    data-reference-id="<?php echo $transaction['unique_id'];?>"
                                                    data-amount="<?php echo $transaction['available_amount'];?>">
                                                     <i class="fa fa-check fa-lg"></i>
@@ -138,9 +145,9 @@ class OrderTransactions
                                     <td class="text-center">
                                         <?php if ($transaction['can_refund']) { ?>
                                             <div class="transaction-action-button">
-                                                <a class="button btn btn-transaction btn-warning" id="button-refund" role="button"
-                                                   data-post-action="doRefund"
-                                                   data-toggle="<?php echo $module_name;?>-tooltip" data-placement="bottom"
+                                                <a class="button btn btn-transaction btn-warning" id="button-refund"
+                                                   role="button" data-post-action="doRefund" data-placement="bottom"
+                                                   data-toggle="<?php echo $module_name;?>-tooltip"
                                                    title="<?php echo $data->translations['modal']['refund']['title'];?>"
                                                    data-reference-id="<?php echo $transaction['unique_id'];?>"
                                                    data-amount="<?php echo $transaction['available_amount'];?>">
@@ -152,23 +159,38 @@ class OrderTransactions
                                     <td class="text-center">
                                         <?php if ($transaction['can_void']) { ?>
                                             <div class="transaction-action-button">
-                                                <a class="button btn btn-transaction btn-danger" id="button-void" data-toggle="<?php echo $module_name;?>-tooltip" data-placement="bottom"
+                                                <a class="button btn btn-transaction btn-danger" id="button-void"
+                                                   data-toggle="<?php echo $module_name;?>-tooltip"
+                                                   data-placement="bottom"
                                                     <?php if (!$data->params['modal']['void']['allowed']) { ?>
-                                                         title="Cancel Transaction is currently disabled! <br /> This option can be enabled in the <strong>Module Settings</strong>, but it depends on the <strong>acquirer</strong>. For further Information please contact your <strong>Account Manager</strong>"
+                                                         title="Cancel Transaction is currently disabled! <br />
+                                                         This option can be enabled in the
+                                                         <strong>Module Settings</strong>, but it depends on the
+                                                         <strong>acquirer</strong>. For further Information please
+                                                         contact your <strong>Account Manager</strong>"
                                                     <?php } elseif ($transaction['void_exists']) { ?>
-                                                        title="There is already an approved <strong>Cancel Transaction</strong> for <strong><?php echo ucfirst($transaction['type']);?> Transaction</strong> with Unique Id: <strong><?php echo $transaction['unique_id'];?></strong>"
+                                                        title="There is already an approved <strong>Cancel
+                                                        Transaction</strong> for <strong><?php
+                                                        echo ucfirst($transaction['type']);
+                                                        ?> Transaction</strong> with Unique Id:
+                                                        <strong><?php echo $transaction['unique_id'];?></strong>"
                                                     <?php } ?>
 
-                                                    <?php if (!$data->params['modal']['void']['allowed'] || $transaction['void_exists']) { ?>
+                                                    <?php
+                                                    if (
+                                                        !$data->params['modal']['void']['allowed'] ||
+                                                        $transaction['void_exists']
+                                                    ) { ?>
                                                         disabled="disabled"
                                                     <?php } else { ?>
-                                                        title="<?php echo $data->translations['modal']['void']['title'];?>"
+                                                    title="<?php echo $data->translations['modal']['void']['title'];?>"
                                                     <?php } ?>
-
-                                                   role="button" data-post-action="doVoid" data-reference-id="<?php echo $transaction['unique_id'];?>">
+                                                   role="button" data-post-action="doVoid"
+                                                   data-reference-id="<?php echo $transaction['unique_id'];?>">
                                                     <i class="fa fa-remove fa-lg"></i>
                                                 </a>
-                                                <span class="btn btn-primary" id="img_loading_void" style="display:none;">
+                                                <span class="btn btn-primary" id="img_loading_void"
+                                                      style="display:none;">
                                                     <i class="fa fa-circle-o-notch fa-spin fa-lg"></i>
                                                 </span>
                                             </div>
@@ -193,28 +215,41 @@ class OrderTransactions
                         </div>
                         <div class="modal-body">
                             <?php
-                            echo zen_draw_form($module_name . '-modal-form', FILENAME_ORDERS, zen_get_all_get_params(array('action')) . 'action=', 'post', 'class="modal-form" id="' . $module_name . '-modal-form"', true) . zen_hide_session_id();
+                                echo zen_draw_form(
+                                    $module_name . '-modal-form',
+                                    FILENAME_ORDERS,
+                                    zen_get_all_get_params(array('action')) . 'action=',
+                                    'post',
+                                    'class="modal-form" id="' . $module_name . '-modal-form"',
+                                    true
+                                ) . zen_hide_session_id();
                             ?>
                                 <input type="hidden" name="reference_id" value="" />
 
-                                <div id="<?php echo $module_name;?>_capture_trans_info" class="row" style="display: none;">
+                                <div id="<?php echo $module_name;?>_capture_trans_info" class="row"
+                                     style="display: none;">
                                     <div class="col-xs-12">
                                         <div class="alert alert-info">
                                             You are allowed to process only full capture through this panel!
                                             <br/>
-                                            This option can be enabled in the <strong>Module Settings</strong>, but it depends on the <strong>acquirer</strong>.
-                                            For further Information please contact your <strong>Account Manager</strong>.
+                                            This option can be enabled in the <strong>Module Settings</strong>,
+                                            but it depends on the <strong>acquirer</strong>.
+                                            For further Information please contact your
+                                            <strong>Account Manager</strong>.
                                         </div>
                                     </div>
                                 </div>
 
-                                <div id="<?php echo $module_name;?>_refund_trans_info" class="row" style="display: none;">
+                                <div id="<?php echo $module_name;?>_refund_trans_info" class="row"
+                                    style="display: none;">
                                     <div class="col-xs-12">
                                         <div class="alert alert-info">
                                             You are allowed to process only full refund through this panel!
                                             <br/>
-                                            This option can be enabled in the <strong>Module Settings</strong>, but it depends on the <strong>acquirer</strong>.
-                                            For further Information please contact your <strong>Account Manager</strong>.
+                                            This option can be enabled in the <strong>Module Settings</strong>,
+                                            but it depends on the <strong>acquirer</strong>.
+                                            For further Information please contact your
+                                            <strong>Account Manager</strong>.
                                         </div>
                                     </div>
                                 </div>
@@ -232,15 +267,25 @@ class OrderTransactions
                                 <div class="form-group amount-input">
                                     <label for="<?php echo $module_name;?>_transaction_amount">Amount:</label>
                                     <div class="input-group">
-                                        <span class="input-group-addon" data-toggle="<?php echo $module_name;?>-tooltip" data-placement="top" title="<?php echo $data->params['currency']['iso_code'];?>"><?php echo $data->params['currency']['sign'];?></span>
-                                        <input type="text" class="form-control" id="<?php echo $module_name;?>_transaction_amount" name="amount" placeholder="Amount..." />
+                                        <span class="input-group-addon" data-toggle="<?php echo $module_name;?>-tooltip"
+                                            data-placement="top"
+                                            title="<?php echo $data->params['currency']['iso_code'];?>"><?php
+                                            echo $data->params['currency']['sign']; ?>
+                                        </span>
+                                        <input type="text" class="form-control"
+                                           id="<?php echo $module_name;?>_transaction_amount"
+                                           name="amount" placeholder="Amount..." />
                                     </div>
-                                    <span class="help-block" id="<?php echo $module_name;?>-amount-error-container"></span>
+                                    <span class="help-block"
+                                        id="<?php echo $module_name;?>-amount-error-container"></span>
                                 </div>
 
                                 <div class="form-group usage-input">
-                                    <label for="<?php echo $module_name;?>_transaction_message">Message (optional):</label>
-                                    <textarea class="form-control form-message" rows="3" id="<?php echo $module_name;?>_transaction_message" name="message" placeholder="Message"></textarea>
+                                    <label
+                                        for="<?php echo $module_name;?>_transaction_message">Message (optional):</label>
+                                    <textarea class="form-control form-message" rows="3"
+                                        id="<?php echo $module_name;?>_transaction_message"
+                                        name="message" placeholder="Message"></textarea>
                                 </div>
                             </form>
                         </div>
@@ -250,7 +295,8 @@ class OrderTransactions
                         </span>
                         <span class="form-buttons">
                             <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
-                            <button id="<?php echo $module_name;?>-modal-submit" class="btn btn-submit btn-primary">Submit</button>
+                            <button id="<?php echo $module_name;?>-modal-submit"
+                                class="btn btn-submit btn-primary">Submit</button>
                         </span>
                         </div>
                     </div>
@@ -303,7 +349,11 @@ class OrderTransactions
                         if (jQuery(this).is('[disabled]'))
                             return ;
 
-                        transactionModal($(this).attr('data-post-action'), $(this).attr('data-reference-id'), $(this).attr('data-amount'));
+                        transactionModal(
+                            $(this).attr('data-post-action'),
+                            $(this).attr('data-reference-id'),
+                            $(this).attr('data-amount')
+                        );
                     });
 
                     $('.btn-submit').click(function() {
@@ -323,7 +373,8 @@ class OrderTransactions
                     });
 
                     modalObj.on('shown.bs.modal', function() {
-                        /* enable the submit button just in case (if the bootstrapValidator is enabled it will disable the button if necessary */
+                        /* enable the submit button just in case (if the bootstrapValidator
+                           is enabled it will disable the button if necessary */
                         $('#<?php echo $module_name;?>-modal-submit').removeAttr('disabled');
 
                         if (createBootstrapValidator('#<?php echo $module_name;?>-modal-form')) {
@@ -439,7 +490,9 @@ class OrderTransactions
                 }
                 function createBootstrapValidator(submitFormId) {
                     var submitForm = $(submitFormId),
-                        transactionAmount = formatTransactionAmount($('#<?php echo $module_name;?>_transaction_amount').val());
+                        transactionAmount = formatTransactionAmount(
+                            $('#<?php echo $module_name;?>_transaction_amount').val()
+                        );
                     destroyBootstrapValidator(submitFormId);
 
                     var transactionAmountControlSelector = '#<?php echo $module_name;?>_transaction_amount';
@@ -493,9 +546,9 @@ class OrderTransactions
 
             </script>
         <?php
-        $js = ob_get_contents();
+        $javascript = ob_get_contents();
         ob_end_clean();
-        return $js;
+        return $javascript;
     }
 
     /**
@@ -509,20 +562,20 @@ class OrderTransactions
             return false;
         }
 
-        $resourcesHTML = static::getResourcesHtml($data);
+        $resourcesHTML = static::getResourcesHtml();
         $html = static::getHTML($data);
-        $js = static::getJS($data);
+        $javascript = static::getJS($data);
 
-        $outputStartBlock = '<td><table class="noprint">'."\n";
-        $outputStartBlock .= '<tr style="background-color : #bbbbbb; border-style : dotted;">'."\n";
-        $outputEndBlock = '</tr>'."\n";
-        $outputEndBlock .='</table></td>'."\n";
+        $outputStartBlock = '<td><table class="noprint">' . "\n";
+        $outputStartBlock .= '<tr style="background-color : #bbbbbb; border-style : dotted;">' . "\n";
+        $outputEndBlock = '</tr>' . "\n";
+        $outputEndBlock .= '</table></td>' . "\n";
 
         return
             $outputStartBlock .
             $resourcesHTML .
             $html .
-            $js .
+            $javascript .
             $outputEndBlock;
     }
 }

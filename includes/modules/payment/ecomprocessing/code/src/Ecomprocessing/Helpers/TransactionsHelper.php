@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,9 +20,9 @@
 
 namespace Ecomprocessing\Helpers;
 
-use Genesis\API\Constants\Transaction\Types;
-use Genesis\API\Request\Financial\Alternatives\Klarna\Item;
-use Genesis\API\Request\Financial\Alternatives\Klarna\Items;
+use Genesis\Api\Constants\Transaction\Types;
+use Genesis\Api\Request\Financial\Alternatives\Klarna\Item;
+use Genesis\Api\Request\Financial\Alternatives\Klarna\Items;
 
 /**
  * Class TransactionsHelper
@@ -132,7 +133,7 @@ class TransactionsHelper
 
         $shippingCost = array_key_exists('shipping_cost', $order->info) ?
             $order->info['shipping_cost'] :
-            static::_getShippingValueFromTotals($order->totals);
+            static::getShippingValueFromTotals($order->totals);
         if ($shippingCost) {
             $items->addItem(
                 new Item(
@@ -172,7 +173,7 @@ class TransactionsHelper
      *
      * @return float
      */
-    private static function _getShippingValueFromTotals($totals)
+    private static function getShippingValueFromTotals($totals)
     {
         foreach ($totals as $total) {
             if ($total['class'] === self::SHIPPING_TOTAL_KEY) {

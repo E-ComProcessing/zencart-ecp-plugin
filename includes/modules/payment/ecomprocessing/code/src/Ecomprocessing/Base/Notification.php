@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,6 +20,8 @@
 
 namespace Ecomprocessing\Base;
 
+use Ecomprocessing\Helpers\SessionHelper;
+
 abstract class Notification
 {
     const ACTION_SUCCESS = 'success';
@@ -36,6 +39,7 @@ abstract class Notification
      * Build Return URL from Genesis
      * @param string $action
      * @return string
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public static function buildReturnURL($action)
     {
@@ -47,17 +51,20 @@ abstract class Notification
      */
     public static function resetCartSessions()
     {
-        $_SESSION['cart']->reset(true);
-        unset($_SESSION['sendto']);
-        unset($_SESSION['billto']);
-        unset($_SESSION['shipping']);
-        unset($_SESSION['payment']);
-        unset($_SESSION['comments']);
+        $cart = SessionHelper::get('cart');
+        $cart->reset(true);
+
+        SessionHelper::unset('sendto');
+        SessionHelper::unset('billto');
+        SessionHelper::unset('shipping');
+        SessionHelper::unset('payment');
+        SessionHelper::unset('comments');
     }
 
     /**
      * Process Genesis Notification
      * @param array $requestData
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected static function processNotification($requestData)
     {
@@ -115,7 +122,8 @@ abstract class Notification
      */
     public static function handleNotification($requestData)
     {
-        if (!isset($_GET['return'])) {
+        $get_return = filter_input(INPUT_GET, 'return');
+        if (!isset($get_return)) {
             return;
         }
 
@@ -125,7 +133,7 @@ abstract class Notification
 
         $moduleLanguageFile =
             DIR_FS_CATALOG_LANGUAGES .
-            $_SESSION['language'] .
+            SessionHelper::get('language') .
             '/modules/payment/' .
             static::$module_code . '.php';
 
@@ -133,7 +141,7 @@ abstract class Notification
             require_once($moduleLanguageFile);
         }
 
-        $action = $_GET['return'];
+        $action = $get_return;
 
         if ($action == static::ACTION_NOTIFY) {
             static::processNotification($requestData);
@@ -141,6 +149,4 @@ abstract class Notification
             static::processReturnAction($action);
         }
     }
-
-
 }

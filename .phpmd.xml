@@ -21,6 +21,13 @@
     <!--Start of CodeSize RuleSets-->
     <rule ref="rulesets/codesize.xml">
         <exclude name="TooManyPublicMethods"/>
+        <exclude name="ExcessiveMethodLength"/>
+    </rule>
+
+    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="250" />
+        </properties>
     </rule>
     <!--End of CodeSize RuleSets-->
 
@@ -40,6 +47,7 @@
     <rule ref="rulesets/naming.xml">
         <exclude name="LongVariable"/>
         <exclude name="BooleanGetMethodName"/>
+        <exclude name="ShortVariable"/>
     </rule>
 
     <rule ref="rulesets/naming.xml/LongVariable">
@@ -53,9 +61,16 @@
             <property name="checkParameterizedMethods" value="true" />
         </properties>
     </rule>
+
+    <rule ref="rulesets/naming.xml/ShortVariable">
+        <properties>
+            <property name="exceptions" value="db" />
+        </properties>
+    </rule>
     <!--End of Naming RuleSets-->
 
     <rule ref="rulesets/unusedcode.xml"/>
 
     <exclude-pattern>*/genesis/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
 </ruleset>

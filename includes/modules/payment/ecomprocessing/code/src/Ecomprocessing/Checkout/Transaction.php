@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -25,5 +26,5 @@ class Transaction extends \Ecomprocessing\Base\Transaction
      * Transaction DatabaseTableName
      * @var string
      */
-    static protected $table_name = TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS;
+    protected static $table_name = TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS;
 }

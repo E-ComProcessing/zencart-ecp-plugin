@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,9 +20,9 @@
 
 namespace Ecomprocessing\Checkout;
 
-use \Ecomprocessing\Checkout\Settings as EcpCheckoutSettings;
-use \Ecomprocessing\Common            as EcomprocessingCommon;
-use Genesis\API\Constants\Transaction\Parameters\ScaExemptions;
+use Ecomprocessing\Checkout\Settings as EcpCheckoutSettings;
+use Ecomprocessing\Common            as EcomprocessingCommon;
+use Genesis\Api\Constants\Transaction\Parameters\ScaExemptions;
 
 class Installer extends \Ecomprocessing\Base\Installer
 {
@@ -29,13 +30,13 @@ class Installer extends \Ecomprocessing\Base\Installer
      * Transaction DatabaseTableName
      * @var string
      */
-    static protected $table_name = TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS;
+    protected static $table_name = TABLE_ECOMPROCESSING_CHECKOUT_TRANSACTIONS;
 
     /**
      * Settings Values Prefix
      * @var string
      */
-    static protected $settings_prefix = ECOMPROCESSING_CHECKOUT_SETTINGS_PREFIX;
+    protected static $settings_prefix = ECOMPROCESSING_CHECKOUT_SETTINGS_PREFIX;
 
     /**
      * Do on module install
@@ -45,9 +46,11 @@ class Installer extends \Ecomprocessing\Base\Installer
     {
         global $messageStack;
 
-        if (EcpCheckoutSettings::getIsInstalled()) {
+        if (EcpCheckoutSettings::isInstalled()) {
             $messageStack->add_session('E-Comprocessing Checkout module already installed.', 'error');
-            zen_redirect(zen_href_link(FILENAME_MODULES, 'set=payment&module=' . ECOMPROCESSING_CHECKOUT_CODE, 'NONSSL'));
+            zen_redirect(
+                zen_href_link(FILENAME_MODULES, 'set=payment&module=' . ECOMPROCESSING_CHECKOUT_CODE, 'NONSSL')
+            );
             return 'failed';
         }
 
@@ -87,13 +90,13 @@ class Installer extends \Ecomprocessing\Base\Installer
      */
     protected static function addModuleConfigurationsToDb()
     {
-        static::_addMainConfigurationEntries();
-        static::_addCredentialsConfigurationEntries();
-        static::_addTransactionsConfigurationEntries();
-        static::_addWpfConfigurationEntries();
-        static::_addOrderConfigurationEntries();
-        static::_addThreedsOptions();
-        static::_addScaExemptionOptions();
+        static::addMainConfigurationEntries();
+        static::addCredentialsConfigurationEntries();
+        static::addTransactionsConfigurationEntries();
+        static::addWpfConfigurationEntries();
+        static::addOrderConfigurationEntries();
+        static::addThreedsOptions();
+        static::addScaExemptionOptions();
     }
 
     /**
@@ -101,7 +104,7 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return string
      */
-    private static function _getRequiredOptionsAttributes()
+    private static function getRequiredOptionsAttributes()
     {
         return "array(''required'' => ''required'')";
     }
@@ -111,7 +114,7 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addMainConfigurationEntries()
+    private static function addMainConfigurationEntries()
     {
         global $db;
 
@@ -148,11 +151,11 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addCredentialsConfigurationEntries()
+    private static function addCredentialsConfigurationEntries()
     {
         global $db;
 
-        $requiredOptionsAttributes = static::_getRequiredOptionsAttributes();
+        $requiredOptionsAttributes = static::getRequiredOptionsAttributes();
 
         $db->Execute(
             'insert into ' . TABLE_CONFIGURATION . "
@@ -196,11 +199,11 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addTransactionsConfigurationEntries()
+    private static function addTransactionsConfigurationEntries()
     {
         global $db;
 
-        $requiredOptionsAttributes = static::_getRequiredOptionsAttributes();
+        $requiredOptionsAttributes = static::getRequiredOptionsAttributes();
         $transaction_types
             = EcomprocessingCommon::buildSettingsDropDownOptions(
                 EcpCheckoutSettings::getTransactionsList()
@@ -224,7 +227,7 @@ class Installer extends \Ecomprocessing\Base\Installer
             '" . EcpCheckoutSettings::getCompleteSettingKey(
                 'TRANSACTION_TYPES'
             ) . "',
-            '" . \Genesis\API\Constants\Transaction\Types::SALE . "',
+            '" . \Genesis\Api\Constants\Transaction\Types::SALE . "',
             'What transaction type should we use upon purchase?', '6', '0',
             'ecp_zfg_select_drop_down_multiple({$requiredOptionsAttributes}, " .
             "{$transaction_types}, ', now())"
@@ -290,7 +293,7 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addWpfConfigurationEntries()
+    private static function addWpfConfigurationEntries()
     {
         global $db;
 
@@ -343,7 +346,7 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addOrderConfigurationEntries()
+    private static function addOrderConfigurationEntries()
     {
         global $db;
 
@@ -424,7 +427,7 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addThreedsOptions()
+    private static function addThreedsOptions()
     {
         global $db;
 
@@ -468,7 +471,7 @@ class Installer extends \Ecomprocessing\Base\Installer
      *
      * @return void
      */
-    private static function _addScaExemptionOptions()
+    private static function addScaExemptionOptions()
     {
         global $db;
 

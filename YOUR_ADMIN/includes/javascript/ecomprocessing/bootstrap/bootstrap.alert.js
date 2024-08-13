@@ -1,4 +1,4 @@
-+function ($) {
+ + function ($) {
     'use strict';
 
     // ALERT CLASS DEFINITION
@@ -24,7 +24,9 @@
 
         var $parent = $(selector)
 
-        if (e) e.preventDefault()
+        if (e) {
+            e.preventDefault()
+        }
 
         if (!$parent.length) {
             $parent = $this.closest('.alert')
@@ -32,11 +34,14 @@
 
         $parent.trigger(e = $.Event('close.bs.alert'))
 
-        if (e.isDefaultPrevented()) return
+        if (e.isDefaultPrevented()) {
+            return
+        }
 
         $parent.removeClass('in')
 
-        function removeElement() {
+        function removeElement()
+        {
             // detach from parent, fire event then clean up data
             $parent.detach().trigger('closed.bs.alert').remove()
         }
@@ -52,13 +57,18 @@
     // ALERT PLUGIN DEFINITION
     // =======================
 
-    function Plugin(option) {
+    function Plugin(option)
+    {
         return this.each(function () {
             var $this = $(this)
             var data  = $this.data('bs.alert')
 
-            if (!data) $this.data('bs.alert', (data = new Alert(this)))
-            if (typeof option == 'string') data[option].call($this)
+            if (!data) {
+                $this.data('bs.alert', (data = new Alert(this)))
+            }
+            if (typeof option == 'string') {
+                data[option].call($this)
+            }
         })
     }
 

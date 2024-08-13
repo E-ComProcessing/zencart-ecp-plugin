@@ -17,10 +17,12 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-if (!defined('IS_ADMIN_FLAG')) die('Illegal Access');
+if (!defined('IS_ADMIN_FLAG')) {
+    die('Illegal Access');
+}
 
 if (ecp_get_is_payment_module_index_action()) {
-?>
+    ?>
     <style type="text/css">
         span.ecomprocessing-toggle  {
             display: inline-block;
@@ -34,7 +36,7 @@ if (ecp_get_is_payment_module_index_action()) {
             color: #FA5858;
         }
     </style>
-<?php
+    <?php
 }
 
 if (ecp_get_is_payment_module_edit_action()) {
@@ -108,7 +110,7 @@ if (ecp_get_is_payment_module_edit_action()) {
         }
     </style>
 
-<?php
+    <?php
 }
 
 /**
@@ -119,7 +121,7 @@ if (ecp_get_is_payment_module_edit_action()) {
 function ecp_add_external_resources($resourceNames)
 {
     $html = "";
-    foreach ($resourceNames as $key => $resourceName) {
+    foreach ($resourceNames as $resourceName) {
         $html .= ecp_add_external_resource($resourceName);
     }
     return $html;
@@ -148,7 +150,7 @@ function ecp_add_external_resource($resourcePath)
     }
 
     if ($isResourceJavaScript) {
-        return "<script src=\"" . $includePath . $resourcePath ."\"></script>";
+        return "<script src=\"" . $includePath . $resourcePath . "\"></script>";
     } else {
         return "<link href=\"" . $includePath . $resourcePath . "\" rel=\"stylesheet\" type=\"text/css\" />";
     }
@@ -160,10 +162,11 @@ function ecp_add_external_resource($resourcePath)
  */
 function ecp_get_is_payment_module_edit_action()
 {
+    $action = filter_input(INPUT_GET, 'action');
     return
         ecp_get_is_payment_module_index_action() &&
-        isset($_GET['action']) &&
-        (strtolower($_GET['action'] == 'edit'));
+        isset($action) &&
+        (strtolower($action == 'edit'));
 }
 
 /**
@@ -172,11 +175,14 @@ function ecp_get_is_payment_module_edit_action()
  */
 function ecp_get_is_payment_module_index_action()
 {
+    $set    = filter_input(INPUT_GET, 'set');
+    $module = filter_input(INPUT_GET, 'module');
+
     return
-        isset($_GET['set']) &&
-        isset($_GET['module']) &&
-        (strtolower($_GET['set']) == 'payment') &&
-        (strtolower($_GET['module']) == ECOMPROCESSING_CHECKOUT_CODE);
+        isset($set) &&
+        isset($module) &&
+        (strtolower($set) == 'payment') &&
+        (strtolower($module) == ECOMPROCESSING_CHECKOUT_CODE);
 }
 
 /**

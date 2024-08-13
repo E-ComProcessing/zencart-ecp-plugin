@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2018-2023 E-Comprocessing Ltd.
  *
@@ -23,14 +24,16 @@
 
 namespace Ecomprocessing\Helpers;
 
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\RegistrationIndicators;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\ShippingAddressUsageIndicators;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\UpdateIndicators;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\ReorderItemIndicators;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\Purchase\Categories;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\DeliveryTimeframes;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\ShippingIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\RegistrationIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\ShippingAddressUsageIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\UpdateIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\ReorderItemIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\Purchase\Categories;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\DeliveryTimeframes;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\ShippingIndicators;
+use DateInterval;
+use DateTime;
 
 /**
  * Class ThreedsHelper
@@ -67,9 +70,9 @@ class ThreedsHelper
     /**
      * Ids of statuses when order is completed successfully
      *
-     * @var array $_completeStatuses
+     * @var array $completeStatuses
      */
-    private static $_completeStatuses = [3];
+    private static $completeStatuses = [3];
 
     /**
      * Get type of the purchase
@@ -191,25 +194,25 @@ class ThreedsHelper
 
         if (is_array($customerOrders) && count($customerOrders) > 0) {
             $customerOrders    = array_reverse($customerOrders);
-            $startDateLast24h  = (new \DateTime())->sub(
-                new \DateInterval(self::ACTIVITY_24_HOURS)
+            $startDateLast24h  = (new DateTime())->sub(
+                new DateInterval(self::ACTIVITY_24_HOURS)
             );
-            $startDateLast6m   = (new \DateTime())->sub(
-                new \DateInterval(self::ACTIVITY_6_MONTHS)
+            $startDateLast6m   = (new DateTime())->sub(
+                new DateInterval(self::ACTIVITY_6_MONTHS)
             );
-            $previousYear      = (new \DateTime())->sub(
-                new \DateInterval(self::ACTIVITY_1_YEAR)
+            $previousYear      = (new DateTime())->sub(
+                new DateInterval(self::ACTIVITY_1_YEAR)
             )
                 ->format('Y');
-            $startDateLastYear = (new \DateTime())
+            $startDateLastYear = (new DateTime())
                 ->setDate($previousYear, 1, 1)
                 ->setTime(0, 0, 0);
-            $endDateLastYear   = (new \DateTime())
+            $endDateLastYear   = (new DateTime())
                 ->setDate($previousYear, 12, 31)
                 ->setTime(23, 59, 59);
 
             foreach ($customerOrders as $customerOrder) {
-                $orderDate = \DateTime::createFromFormat(
+                $orderDate = DateTime::createFromFormat(
                     self::ZENCART_DATETIME_FORMAT,
                     $customerOrder['date_purchased']
                 );
@@ -226,7 +229,7 @@ class ThreedsHelper
                     $numberOfOrdersLast6M += (
                         in_array(
                             $customerOrder['orders_status'],
-                            self::$_completeStatuses
+                            self::$completeStatuses
                         )
                     )
                     ? 1 : 0;
@@ -260,7 +263,7 @@ class ThreedsHelper
 
         $indicator = ShippingIndicators::STORED_ADDRESS;
 
-        if (self::_areAddressesSame($data->order->billing, $data->order->delivery)) {
+        if (self::areAddressesSame($data->order->billing, $data->order->delivery)) {
             $indicator = ShippingIndicators::SAME_AS_BILLING;
         }
 
@@ -278,7 +281,7 @@ class ThreedsHelper
      */
     public static function getReorderItemsIndicator($customerId, $products, $dbObj)
     {
-        $productIds = self::_getCustomerOrderedProductIds($customerId, $dbObj);
+        $productIds = self::getCustomerOrderedProductIds($customerId, $dbObj);
 
         // We use the native method to extract product id from the
         // complex id/option/value
@@ -308,7 +311,7 @@ class ThreedsHelper
         $indicatorClass = UpdateIndicators::class;
         $dateToCheck    = $customerInfo['date_account_last_modified'];
 
-        return self::_getIndicatorValue($dateToCheck, $indicatorClass);
+        return self::getIndicatorValue($dateToCheck, $indicatorClass);
     }
 
     /**
@@ -320,7 +323,7 @@ class ThreedsHelper
      */
     public static function findFirstCustomerOrderDate($customerOrders)
     {
-        $orderDate = (new \DateTime())->format(self::ZENCART_DATETIME_FORMAT);
+        $orderDate = (new DateTime())->format(self::ZENCART_DATETIME_FORMAT);
 
         if (is_array($customerOrders) and count($customerOrders) > 0) {
             $orderDate = $customerOrders[0]['date_purchased'];
@@ -338,7 +341,7 @@ class ThreedsHelper
      */
     public static function getPasswordChangeIndicator($date)
     {
-        return self::_getIndicatorValue($date, PasswordChangeIndicators::class);
+        return self::getIndicatorValue($date, PasswordChangeIndicators::class);
     }
 
     /**
@@ -355,7 +358,7 @@ class ThreedsHelper
             $customerOrders
         );
 
-        return self::_getIndicatorValue($customerFirstOrderDate, $indicatorClass);
+        return self::getIndicatorValue($customerFirstOrderDate, $indicatorClass);
     }
 
     /**
@@ -374,8 +377,8 @@ class ThreedsHelper
             "$orderInfo[firstname] $orderInfo[lastname]",
             $orderInfo['street_address'],
             $orderInfo['suburb'],
-            $orderInfo['delivery_city'],
-            $orderInfo['delivery_postcode'],
+            (!empty($orderInfo['delivery_city'])) ? $orderInfo['delivery_city'] : '',
+            (!empty($orderInfo['delivery_postcode'])) ? $orderInfo['delivery_postcode'] : '',
             $orderInfo['country']['title'],
         ];
 
@@ -390,19 +393,20 @@ class ThreedsHelper
                     $customerOrder['delivery_country'],
                 ];
 
-                if (count(
-                    array_diff(
-                        $cartShippingAddress,
-                        $orderShippingAddress
-                    )
-                ) === 0
+                if (
+                    count(
+                        array_diff(
+                            $cartShippingAddress,
+                            $orderShippingAddress
+                        )
+                    ) === 0
                 ) {
                     return $customerOrder['date_purchased'];
                 }
             }
         }
 
-        return (new \DateTime())->format(self::ZENCART_DATETIME_FORMAT);
+        return (new DateTime())->format(self::ZENCART_DATETIME_FORMAT);
     }
 
     /**
@@ -414,7 +418,7 @@ class ThreedsHelper
      */
     public static function getShippingAddressUsageIndicator($date)
     {
-        return self::_getIndicatorValue(
+        return self::getIndicatorValue(
             $date,
             ShippingAddressUsageIndicators::class
         );
@@ -428,7 +432,7 @@ class ThreedsHelper
      *
      * @return bool
      */
-    private static function _areAddressesSame($invoiceAddress, $shippingAddress)
+    private static function areAddressesSame($invoiceAddress, $shippingAddress)
     {
         $invoice = [
             $invoiceAddress['firstname'],
@@ -461,9 +465,9 @@ class ThreedsHelper
      *
      * @return string
      */
-    private static function _getIndicatorValue($date, $indicatorClass)
+    private static function getIndicatorValue($date, $indicatorClass)
     {
-        switch (self::_getDateIndicator($date)) {
+        switch (self::getDateIndicator($date)) {
             case static::LESS_THAN_30_DAYS_INDICATOR:
                 return $indicatorClass::LESS_THAN_30DAYS;
             case static::MORE_THAN_30_LESS_THAN_60_INDICATOR:
@@ -486,11 +490,12 @@ class ThreedsHelper
      *
      * @return string
      */
-    private static function _getDateIndicator($date)
+    private static function getDateIndicator($date)
     {
-        $now = new \DateTime();
-        $checkDate = \DateTime::createFromFormat(
-            self::ZENCART_DATETIME_FORMAT, $date
+        $now = new DateTime();
+        $checkDate = DateTime::createFromFormat(
+            self::ZENCART_DATETIME_FORMAT,
+            $date
         );
         $days = $checkDate->diff($now)->days;
 
@@ -515,7 +520,7 @@ class ThreedsHelper
      *
      * @return object
      */
-    private static function _getCustomerOrderedProductIds($customerId, $dbObj)
+    private static function getCustomerOrderedProductIds($customerId, $dbObj)
     {
         $productIdsQueryRaw = sprintf(
             "SELECT DISTINCT (op.products_id) AS product_id
@@ -533,7 +538,8 @@ class ThreedsHelper
             $dbObj->bindVars(
                 $productIdsQueryRaw,
                 ':customers_id',
-                $customerId, 'integer'
+                $customerId,
+                'integer'
             ),
             false, // zf_limit
             false, // zf_cache

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,19 +20,21 @@
 
 namespace Ecomprocessing\Base;
 
+use Exception;
+
 abstract class Installer
 {
     /**
      * Transaction DatabaseTableName
      * @var string
      */
-    static protected $table_name = null;
+    protected static $table_name = null;
 
     /**
      * Settings Values Prefix
      * @var string
      */
-    static protected $settings_prefix = null;
+    protected static $settings_prefix = null;
 
     /**
      * Checks if class overridden properly
@@ -40,11 +43,11 @@ abstract class Installer
     private static function check()
     {
         if (empty(static::$table_name)) {
-            throw new \Exception("TablePrefix not set");
+            throw new Exception("TablePrefix not set");
         }
 
         if (empty(static::$settings_prefix)) {
-            throw new \Exception("SettingsPrefix not set");
+            throw new Exception("SettingsPrefix not set");
         }
     }
 

@@ -1,1 +1,4 @@
 .idea
+vendor
+phpcs_report.xml
+phpmd_report.xml

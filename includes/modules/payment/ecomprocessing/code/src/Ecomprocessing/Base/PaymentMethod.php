@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,14 +20,16 @@
 
 namespace Ecomprocessing\Base;
 
-use \Ecomprocessing\Common as EcomprocessingCommon;
-use \Ecomprocessing\OrderTransactions as EcomprocessingOrderTransactions;
-use \Ecomprocessing\Base\Transaction as EcomprocessingTransactionBase;
-use \Ecomprocessing\Checkout\TransactionProcess as EcomprocessingCheckoutTransactionProcess;
+use Ecomprocessing\Base\Transaction as EcomprocessingTransactionBase;
+use Ecomprocessing\Common as EcomprocessingCommon;
+use Ecomprocessing\OrderTransactions as EcomprocessingOrderTransactions;
+use stdClass;
 
+/**
+ * @SuppressWarnings(PHPMD)
+ */
 abstract class PaymentMethod extends \base
 {
-
     const PLATFORM_TRANSACTION_PREFIX = 'zencart-';
 
     /**
@@ -157,20 +160,21 @@ abstract class PaymentMethod extends \base
     private function doExecuteReferenceTransaction($transaction_type, $order_id)
     {
         global $messageStack;
+        global $db;
 
         try {
-            $data = new \stdClass();
-            $data->reference_id = $_POST['reference_id'];
-            $data->usage = $_POST['message'];
+            $data = new stdClass();
+            $data->reference_id = filter_input(INPUT_POST, 'reference_id');
+            $data->usage = filter_input(INPUT_POST, 'message');
             $data->remote_address = EcomprocessingCommon::getServerRemoteAddress();
 
-            if ($transaction_type != \Genesis\API\Constants\Transaction\Types::VOID) {
-                $data->amount = $_POST['amount'];
+            if ($transaction_type != \Genesis\Api\Constants\Transaction\Types::VOID) {
+                $data->amount = filter_input(INPUT_POST, 'amount');
             }
 
             $transaction = $this->getTransactionById($data->reference_id);
 
-            if ($transaction_type != \Genesis\API\Constants\Transaction\Types::VOID) {
+            if ($transaction_type != \Genesis\Api\Constants\Transaction\Types::VOID) {
                 $data->currency = $transaction['currency'];
             }
 
@@ -184,7 +188,7 @@ abstract class PaymentMethod extends \base
             if (isset($responseObject->unique_id)) {
                 $timestamp = EcomprocessingCommon::formatTimeStamp($responseObject->timestamp);
 
-                if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+                if ($responseObject->status == \Genesis\Api\Constants\Transaction\States::APPROVED) {
                     $messageStack->add_session($responseObject->message, 'success');
                 } else {
                     $messageStack->add_session($responseObject->message, 'error');
@@ -206,11 +210,11 @@ abstract class PaymentMethod extends \base
                             : $transaction['terminal_token'],
                     'message' =>
                         isset($responseObject->message)
-                            ? $responseObject->message
+                            ? $db->prepareInput($responseObject->message)
                             : '',
                     'technical_message' =>
                         isset($responseObject->technical_message)
-                            ? $responseObject->technical_message
+                            ? $db->prepareInput($responseObject->technical_message)
                             : '',
                 );
 
@@ -271,7 +275,7 @@ abstract class PaymentMethod extends \base
      * calculate zone matches and flag settings to determine whether this module should display to customers or not
      *
      */
-    public function update_status()
+    public function update_status() // phpcs:ignore
     {
         $this->enabled = false;
     }
@@ -279,9 +283,8 @@ abstract class PaymentMethod extends \base
     /**
      * Used to perform additional checks, before the Payment is submitted
      */
-    public function pre_confirmation_check()
+    public function pre_confirmation_check() // phpcs:ignore
     {
-
     }
 
     /**
@@ -300,7 +303,7 @@ abstract class PaymentMethod extends \base
      *
      * @return string
      */
-    public function process_button()
+    public function process_button() // phpcs:ignore
     {
         return false;
     }
@@ -310,7 +313,7 @@ abstract class PaymentMethod extends \base
      *
      * @return string
      */
-    public function javascript_validation()
+    public function javascript_validation() // phpcs:ignore
     {
     }
 
@@ -320,9 +323,10 @@ abstract class PaymentMethod extends \base
      *
      * @return boolean
      */
-    public function after_process()
+    public function after_process() // phpcs:ignore
     {
         global $insert_id;
+        global $db;
 
         if (isset($this->responseObject) && isset($this->responseObject->unique_id)) {
             $timestamp = EcomprocessingCommon::formatTimeStamp($this->responseObject->timestamp);
@@ -338,11 +342,11 @@ abstract class PaymentMethod extends \base
                 'currency' => $this->responseObject->currency,
                 'message' =>
                     isset($this->responseObject->message)
-                        ? $this->responseObject->message
+                        ? $db->prepareInput($this->responseObject->message)
                         : '',
                 'technical_message' =>
                     isset($this->responseObject->technical_message)
-                        ? $this->responseObject->technical_message
+                        ? $db->prepareInput($this->responseObject->technical_message)
                         : '',
                 'timestamp' => $timestamp,
             );
@@ -363,6 +367,7 @@ abstract class PaymentMethod extends \base
      * from the Gateway Response
      * @param int $orderId
      * @return bool
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function processUpdateOrder($orderId)
     {
@@ -377,11 +382,11 @@ abstract class PaymentMethod extends \base
      * @param int $zf_order_id
      * @return string
      */
-    public function admin_notification($zf_order_id)
+    public function admin_notification($zf_order_id) // phpcs:ignore
     {
         global $db, $order;
 
-        $data = new \stdClass;
+        $data = new stdClass();
         $data->paths = array(
             'images' => 'images/ecomprocessing/',
             'js' => 'includes/javascript/ecomprocessing/',
@@ -414,61 +419,54 @@ abstract class PaymentMethod extends \base
         foreach ($transactions as &$transaction) {
             $transaction['timestamp'] = date('H:i:s m/d/Y', strtotime($transaction['timestamp']));
 
+            $transaction['can_capture'] = false;
             if (EcomprocessingTransactionBase::getCanCaptureTransaction($transaction)) {
                 $transaction['can_capture'] = true;
-            } else {
-                $transaction['can_capture'] = false;
-            }
 
-            if ($transaction['can_capture']) {
                 $totalAuthorizedAmount = $this->getTransactionsSumAmount(
                     $transaction['order_id'],
                     $transaction['reference_id'],
                     array(
-                        \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
-                        \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D,
-                        \Genesis\API\Constants\Transaction\Types::GOOGLE_PAY,
-                        \Genesis\API\Constants\Transaction\Types::PAY_PAL,
-                        \Genesis\API\Constants\Transaction\Types::APPLE_PAY,
+                        \Genesis\Api\Constants\Transaction\Types::AUTHORIZE,
+                        \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D,
+                        \Genesis\Api\Constants\Transaction\Types::GOOGLE_PAY,
+                        \Genesis\Api\Constants\Transaction\Types::PAY_PAL,
+                        \Genesis\Api\Constants\Transaction\Types::APPLE_PAY,
                     ),
-                    \Genesis\API\Constants\Transaction\States::APPROVED
+                    \Genesis\Api\Constants\Transaction\States::APPROVED
                 );
                 $totalCapturedAmount = $this->getTransactionsSumAmount(
                     $transaction['order_id'],
                     $transaction['unique_id'],
-                    \Genesis\API\Constants\Transaction\Types::CAPTURE,
-                    \Genesis\API\Constants\Transaction\States::APPROVED
+                    [\Genesis\Api\Constants\Transaction\Types::CAPTURE],
+                    \Genesis\Api\Constants\Transaction\States::APPROVED
                 );
                 $transaction['available_amount'] = $totalAuthorizedAmount - $totalCapturedAmount;
             }
 
+            $transaction['can_refund'] = false;
             if (EcomprocessingTransactionBase::getCanRefundTransaction($transaction)) {
                 $transaction['can_refund'] = true;
-            } else {
-                $transaction['can_refund'] = false;
-            }
 
-            if ($transaction['can_refund']) {
                 $totalCapturedAmount = $transaction['amount'];
                 $totalRefundedAmount = $this->getTransactionsSumAmount(
                     $transaction['order_id'],
                     $transaction['unique_id'],
-                    \Genesis\API\Constants\Transaction\Types::REFUND,
-                    \Genesis\API\Constants\Transaction\States::APPROVED
+                    [\Genesis\Api\Constants\Transaction\Types::REFUND],
+                    \Genesis\Api\Constants\Transaction\States::APPROVED
                 );
                 $transaction['available_amount'] = $totalCapturedAmount - $totalRefundedAmount;
             }
 
+            $transaction['can_void'] = false;
             if (EcomprocessingTransactionBase::getCanVoidTransaction($transaction)) {
                 $transaction['can_void'] = true;
                 $transaction['void_exists'] = $this->getTransactionsByTypeAndStatus(
                     $transaction['order_id'],
                     $transaction['unique_id'],
-                    \Genesis\API\Constants\Transaction\Types::VOID,
-                    \Genesis\API\Constants\Transaction\States::APPROVED
+                    [\Genesis\Api\Constants\Transaction\Types::VOID],
+                    \Genesis\Api\Constants\Transaction\States::APPROVED
                 ) !== false;
-            } else {
-                $transaction['can_void'] = false;
             }
 
             if (!isset($transaction['available_amount'])) {
@@ -542,7 +540,7 @@ abstract class PaymentMethod extends \base
      *
      * @return array
      */
-    public function get_error()
+    public function get_error() // phpcs:ignore
     {
     }
 
@@ -558,10 +556,10 @@ abstract class PaymentMethod extends \base
      * @param integer $order_id
      * @return bool
      */
-    public function _doRefund($order_id)
+    public function _doRefund($order_id) // phpcs:ignore
     {
         $this->doExecuteReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::REFUND,
+            \Genesis\Api\Constants\Transaction\Types::REFUND,
             $order_id
         );
         return true;
@@ -572,10 +570,10 @@ abstract class PaymentMethod extends \base
      * @param integer $order_id
      * @return bool
      */
-    public function _doCapt($order_id)
+    public function _doCapt($order_id) // phpcs:ignore
     {
         $this->doExecuteReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::CAPTURE,
+            \Genesis\Api\Constants\Transaction\Types::CAPTURE,
             $order_id
         );
         return true;
@@ -586,10 +584,10 @@ abstract class PaymentMethod extends \base
      * @param integer $order_id
      * @return bool
      */
-    public function _doVoid($order_id)
+    public function _doVoid($order_id) // phpcs:ignore
     {
         $this->doExecuteReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::VOID,
+            \Genesis\Api\Constants\Transaction\Types::VOID,
             $order_id
         );
         return true;

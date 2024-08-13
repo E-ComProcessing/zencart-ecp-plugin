@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,15 +20,19 @@
 
 namespace Ecomprocessing\Checkout;
 
-use \Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
-use \Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
+use Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
+use Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
 use Ecomprocessing\Helpers\ThreedsHelper;
 use Ecomprocessing\Helpers\TransactionsHelper;
-use Genesis\API\Constants\Payment\Methods;
-use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
-use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
-use Genesis\API\Constants\Transaction\Types;
+use Genesis\Api\Constants\Payment\Methods;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types;
+use Genesis\Api\Response;
+use Genesis\Genesis;
 
+/**
+ * @SuppressWarnings(PHPMD)
+ */
 class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 {
     const ORDER_CONTENT_TYPE_VIRTUAL = 'virtual';
@@ -39,7 +44,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
     {
         parent::doLoadGenesisPrivateConfigValues();
 
-        if (EcomprocessingCheckoutSettings::getIsConfigured()) {
+        if (EcomprocessingCheckoutSettings::isConfigured()) {
             \Genesis\Config::setUsername(
                 EcomprocessingCheckoutSettings::getUserName()
             );
@@ -49,9 +54,9 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
             );
 
             \Genesis\Config::setEnvironment(
-                EcomprocessingCheckoutSettings::getIsLiveMode()
-                    ? \Genesis\API\Constants\Environments::PRODUCTION
-                    : \Genesis\API\Constants\Environments::STAGING
+                EcomprocessingCheckoutSettings::isLiveMode()
+                    ? \Genesis\Api\Constants\Environments::PRODUCTION
+                    : \Genesis\Api\Constants\Environments::STAGING
             );
         }
     }
@@ -60,19 +65,18 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      * Send transaction to Genesis
      *
      * @param $data array Transaction Data
-     * @return \stdClass
+     * @return Response
      * @throws \Exception
-     * @throws \Genesis\Exceptions\ErrorAPI
      */
     public static function pay($data)
     {
         try {
-            $genesis = new \Genesis\Genesis('WPF\Create');
+            $genesis = new Genesis('Wpf\Create');
 
             /**
              * Autocomplete helper comment
              *
-             * @var \Genesis\API\Request\WPF\Create $request
+             * @var \Genesis\Api\Request\Wpf\Create $request
              */
             $request = $genesis->request();
             $request
@@ -104,12 +108,12 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
                 ->setShippingCountry($data->order->delivery['country']['iso_code_2'])
                 ->setLanguage($data->language_id);
 
-            static::_addTransactionTypesToGatewayRequest($genesis, $data->order);
+            static::addTransactionTypesToGatewayRequest($genesis, $data->order);
 
             static::setTokenizationData($genesis->request());
 
             if (EcomprocessingCheckoutSettings::isThreedsAlowed()) {
-                static::_addThreedsData($genesis, $data);
+                static::addThreedsData($genesis, $data);
             }
 
             $wpfAmount = (float)$request->getAmount();
@@ -121,9 +125,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 
             $genesis->execute();
 
-            return $genesis->response()->getResponseObject();
-        } catch (\Genesis\Exceptions\ErrorAPI $api) {
-            throw $api;
+            return $genesis->response();
         } catch (\Exception $exception) {
             throw $exception;
         }
@@ -140,9 +142,9 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      * @return void
      * @throws \Genesis\Exceptions\ErrorParameter
      */
-    private static function _addTransactionTypesToGatewayRequest($genesis, $order)
+    private static function addTransactionTypesToGatewayRequest($genesis, $order)
     {
-        $types = static::_getCheckoutTransactionTypes();
+        $types = static::getCheckoutTransactionTypes();
 
         foreach ($types as $transactionType) {
             if (is_array($transactionType)) {
@@ -156,7 +158,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
                 continue;
             }
 
-            $parameters = static::_getCustomRequiredAttributes(
+            $parameters = static::getCustomRequiredAttributes(
                 $transactionType,
                 $order
             );
@@ -183,63 +185,55 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      * @return array
      * @throws \Genesis\Exceptions\ErrorParameter
      */
-    private static function _getCustomRequiredAttributes($transactionType, $order)
+    private static function getCustomRequiredAttributes($transactionType, $order)
     {
         $parameters = array();
 
         switch ($transactionType) {
-        case \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE:
-            $parameters = array(
-                'card_type'   =>
-                    CardTypes::VIRTUAL,
-                'redeem_type' =>
-                    RedeemTypes::INSTANT
-            );
-            break;
-        case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
-        case \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
-            $parameters = array(
+            case \Genesis\Api\Constants\Transaction\Types::IDEBIT_PAYIN:
+            case \Genesis\Api\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
+                $parameters = array(
                 'customer_account_id' => static::getCurrentUserIdHash()
-            );
-            break;
-        case \Genesis\API\Constants\Transaction\Types::KLARNA_AUTHORIZE:
-            $items      = TransactionsHelper::getKlarnaCustomParamItems($order);
-            $parameters = $items->toArray();
-            break;
-        case \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE:
-            $userId = static::getCustomerId();
-            $trustlyUserId = empty($userId) ?
-                static::getCurrentUserIdHash() : $userId;
-
-            $parameters = array(
-                'user_id' => $trustlyUserId
-            );
-            break;
-        case Types::ONLINE_BANKING_PAYIN:
-            $selectedBankCodes = array_filter(
-                Settings::getSelectedBankCodes(),
-                function ($value) {
-                    return $value != 'none';
-                }
-            );
-            if (\Genesis\Utils\Common::isValidArray($selectedBankCodes)) {
-                $parameters['bank_codes'] = array_map(
-                    function ($value) {
-                        return ['bank_code' => $value];
-                    },
-                    $selectedBankCodes
                 );
-            }
-            break;
-        case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
-            $userId = static::getCustomerId();
-            $customerId = empty($userId) ?
+                break;
+            case \Genesis\Api\Constants\Transaction\Types::KLARNA_AUTHORIZE:
+                $items      = TransactionsHelper::getKlarnaCustomParamItems($order);
+                $parameters = $items->toArray();
+                break;
+            case \Genesis\Api\Constants\Transaction\Types::TRUSTLY_SALE:
+                $userId = static::getCustomerId();
+                $trustlyUserId = empty($userId) ?
                 static::getCurrentUserIdHash() : $userId;
 
-            $parameters = array(
+                $parameters = array(
+                'user_id' => $trustlyUserId
+                );
+                break;
+            case Types::ONLINE_BANKING_PAYIN:
+                $selectedBankCodes = array_filter(
+                    Settings::getSelectedBankCodes(),
+                    function ($value) {
+                        return $value != 'none';
+                    }
+                );
+                if (\Genesis\Utils\Common::isValidArray($selectedBankCodes)) {
+                    $parameters['bank_codes'] = array_map(
+                        function ($value) {
+                            return ['bank_code' => $value];
+                        },
+                        $selectedBankCodes
+                    );
+                }
+                break;
+            case \Genesis\Api\Constants\Transaction\Types::PAYSAFECARD:
+                $userId = static::getCustomerId();
+                $customerId = empty($userId) ?
+                static::getCurrentUserIdHash() : $userId;
+
+                $parameters = array(
                 'customer_id' => $customerId
-            );
-            break;
+                );
+                break;
         }
 
         return $parameters;
@@ -252,39 +246,29 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      *
      * @return array
      */
-    private static function _getCheckoutTransactionTypes()
+    private static function getCheckoutTransactionTypes()
     {
         $processedList = array();
         $aliasMap      = array();
 
         $selectedTypes = EcomprocessingCheckoutSettings::getTransactionTypes();
 
-        $pproSuffix    = PPRO_TRANSACTION_SUFFIX;
-        $methods       = Methods::getMethods();
-
-        foreach ($methods as $method) {
-            $aliasMap[$method . $pproSuffix] = Types::PPRO;
-        }
-
-        $aliasMap = array_merge(
-            $aliasMap,
-            [
-                GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE =>
-                    Types::GOOGLE_PAY,
-                GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_SALE      =>
-                    Types::GOOGLE_PAY,
-                PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_AUTHORIZE         =>
-                    Types::PAY_PAL,
-                PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_SALE              =>
-                    Types::PAY_PAL,
-                PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_EXPRESS           =>
-                    Types::PAY_PAL,
-                APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_AUTHORIZE   =>
-                    Types::APPLE_PAY,
-                APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_SALE        =>
-                    Types::APPLE_PAY,
-            ]
-        );
+        $aliasMap = [
+            GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE =>
+                Types::GOOGLE_PAY,
+            GOOGLE_PAY_TRANSACTION_PREFIX . GOOGLE_PAY_PAYMENT_TYPE_SALE      =>
+                Types::GOOGLE_PAY,
+            PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_AUTHORIZE         =>
+                Types::PAY_PAL,
+            PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_SALE              =>
+                Types::PAY_PAL,
+            PAYPAL_TRANSACTION_PREFIX . PAYPAL_PAYMENT_TYPE_EXPRESS           =>
+                Types::PAY_PAL,
+            APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_AUTHORIZE   =>
+                Types::APPLE_PAY,
+            APPLE_PAY_TRANSACTION_PREFIX . APPLE_PAY_PAYMENT_TYPE_SALE        =>
+                Types::APPLE_PAY,
+        ];
 
         foreach ($selectedTypes as $selectedType) {
             if (array_key_exists($selectedType, $aliasMap)) {
@@ -292,12 +276,11 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 
                 $processedList[$transactionType]['name'] = $transactionType;
 
-                $key = self::_getCustomParameterKey($transactionType);
+                $key = self::getCustomParameterKey($transactionType);
 
                 $processedList[$transactionType]['parameters'][] = array(
                     $key => str_replace(
                         [
-                            $pproSuffix,
                             GOOGLE_PAY_TRANSACTION_PREFIX,
                             PAYPAL_TRANSACTION_PREFIX,
                             APPLE_PAY_TRANSACTION_PREFIX
@@ -323,7 +306,8 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
     {
         $consumer = static::getConsumerFromDb();
 
-        if ($consumer !== false
+        if (
+            $consumer !== false
             && $consumer['customer_id'] != static::getCustomerId()
         ) {
             static::redirectToShowError();
@@ -372,7 +356,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
     }
 
     /**
-     * Use Genesis API to get consumer ID
+     * Use Genesis Api to get consumer ID
      *
      * @return int
      */
@@ -381,7 +365,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         global $order;
 
         try {
-            $genesis = new \Genesis\Genesis('NonFinancial\Consumers\Retrieve');
+            $genesis = new Genesis('NonFinancial\Consumers\Retrieve');
             $genesis->request()->setEmail($order->customer['email_address']);
 
             $genesis->execute();
@@ -407,7 +391,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      */
     protected static function isErrorResponse($response)
     {
-        $state = new \Genesis\API\Constants\Transaction\States($response->status);
+        $state = new States($response->status);
 
         return $state->isError();
     }
@@ -423,7 +407,8 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
     {
         global $db, $order;
 
-        if (empty($order->customer['email_address']) || empty($consumer_id)
+        if (
+            empty($order->customer['email_address']) || empty($consumer_id)
             || static::getCustomerId() === 0
         ) {
             return false;
@@ -538,7 +523,6 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      *
      * @param string $reference_id Reference ID
      *
-     * @throws \Genesis\Exceptions\ErrorAPI
      * @throws \Genesis\Exceptions\InvalidArgument
      * @throws \Genesis\Exceptions\InvalidMethod
      * @throws \Genesis\Exceptions\InvalidResponse
@@ -556,7 +540,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         );
 
         if (empty($token)) {
-            $reconcile = new \Genesis\Genesis('WPF\Reconcile');
+            $reconcile = new Genesis('Wpf\Reconcile');
 
             $reconcile->request()->setUniqueId($reference_id);
 
@@ -580,21 +564,18 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      *
      * @return string
      */
-    private static function _getCustomParameterKey($transactionType)
+    private static function getCustomParameterKey($transactionType)
     {
         switch ($transactionType) {
-        case Types::PPRO:
-            $result = 'payment_method';
-            break;
-        case Types::PAY_PAL:
-            $result = 'payment_type';
-            break;
-        case Types::GOOGLE_PAY:
-        case Types::APPLE_PAY:
-            $result = 'payment_subtype';
-            break;
-        default:
-            $result = 'unknown';
+            case Types::PAY_PAL:
+                $result = 'payment_type';
+                break;
+            case Types::GOOGLE_PAY:
+            case Types::APPLE_PAY:
+                $result = 'payment_subtype';
+                break;
+            default:
+                $result = 'unknown';
         }
 
         return $result;
@@ -610,7 +591,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
      *
      * @throws \Genesis\Exceptions\InvalidArgument
      */
-    private static function _addThreedsData($genesis, $data)
+    private static function addThreedsData($genesis, $data)
     {
         global $db;
 
@@ -627,7 +608,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
         /**
          * Autocomplete helper comment
          *
-         * @var \Genesis\API\Request\WPF\Create $request
+         * @var \Genesis\Api\Request\Wpf\Create $request
          */
         $request = $genesis->request();
 
@@ -646,7 +627,9 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
             )
             ->setThreedsV2MerchantRiskReorderItemsIndicator(
                 ThreedsHelper::getReorderItemsIndicator(
-                    $customerId, $data->order->products, $db
+                    $customerId,
+                    $data->order->products,
+                    $db
                 )
             )
             ->setThreedsV2CardHolderAccountCreationDate(
@@ -683,7 +666,7 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
             );
 
         if (!$isVirtualCart) {
-            $shippingAddressDateFirstUsed
+            $shippingAddrDateFirstUsed
                 = ThreedsHelper::findShippingAddressDateFirstUsed(
                     $data->order->delivery,
                     $customerOrders
@@ -691,11 +674,11 @@ class TransactionProcess extends \Ecomprocessing\Base\TransactionProcess
 
             $request
                 ->setThreedsV2CardHolderAccountShippingAddressDateFirstUsed(
-                    $shippingAddressDateFirstUsed
+                    $shippingAddrDateFirstUsed
                 )
                 ->setThreedsV2CardHolderAccountShippingAddressUsageIndicator(
                     ThreedsHelper::getShippingAddressUsageIndicator(
-                        $shippingAddressDateFirstUsed
+                        $shippingAddrDateFirstUsed
                     )
                 );
         }

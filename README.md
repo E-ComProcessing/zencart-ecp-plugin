@@ -1,13 +1,15 @@
 E-Comprocessing Gateway Module for Zen Cart
 ======================================
 
+[![Software License](https://img.shields.io/badge/license-GPL-green.svg?style=flat)](LICENSE)
+
 This is a Payment Module for Zen Cart, that gives you the ability to process payments through E-Comprocessing's Payment Gateway - Genesis.
 
 Requirements
 ------------
 
-* Zen Cart 1.5.x(Tested up to 1.5.8)
-* [GenesisPHP v1.24.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.24.0) - (Integrated in Module)
+* Zen Cart 1.5.x(Tested up to 2.0.1)
+* [GenesisPHP v2.0.2](https://github.com/GenesisGateway/genesis_php/releases/tag/2.0.2) - (Integrated in Module)
 
 GenesisPHP Requirements
 ------------
@@ -55,12 +57,10 @@ Supported Transactions & Payment Methods
   * __eps__
   * __eZeeWallet__
   * __Fashioncheque__
-  * __GiroPay__
   * __Google Pay__
   * __iDeal__
   * __iDebit__
   * __InstaDebit__
-  * __InstantTransfer__
   * __InitRecurringSale__
   * __InitRecurringSale (3D-Secure)__
   * __Intersolve__
@@ -75,7 +75,9 @@ Supported Transactions & Payment Methods
   * __Online Banking__
     * __Interac Combined Pay-in (CPI)__
     * __Bancontact (BTC)__
-    * __Blik One Click (BLK)__
+    * __BLIK (BLK)__
+    * __SPEI (SE)__
+    * __LatiPay (PID)__
   * __OXXO__
   * __P24__
   * __Pago Facil__
@@ -85,15 +87,6 @@ Supported Transactions & Payment Methods
   * __Pix__
   * __POLi__
   * __Post Finance__
-  * __PPRO__
-    * __eps__
-    * __GiroPay__
-    * __Ideal__
-    * __Przelewy24__
-    * __SafetyPay__
-    * __TrustPay__
-    * __BCMC__
-    * __MyBank__
   * __PSE__
   * __RapiPago__
   * __Redpagos__
@@ -116,4 +109,19 @@ _Note_: If you have trouble with your credentials or terminal configuration, get
 
 You're now ready to process payments through our gateway.
 
-[support]: mailto:tech-support@e-comprocessing.com
+Development
+------------
+* Install dev packages
+```shell
+composer install
+```
+* Run PHP Code Sniffer
+```shell
+composer php-cs
+```
+* Run PHP Mess Detector
+```shell
+composer php-md
+```
+
+[support]: mailto:tech-support@e-comprocessing.net

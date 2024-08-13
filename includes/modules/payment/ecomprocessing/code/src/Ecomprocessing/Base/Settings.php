@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,7 +20,8 @@
 
 namespace Ecomprocessing\Base;
 
-use \Ecomprocessing\Common as EcomprocessingCommon;
+use Ecomprocessing\Common as EcomprocessingCommon;
+use Exception;
 
 abstract class Settings
 {
@@ -27,7 +29,7 @@ abstract class Settings
      * Settings Values Prefix
      * @var string
      */
-    static protected $prefix = null;
+    protected static $prefix = null;
 
     /**
      * Inserts a setting key after existing key
@@ -36,6 +38,7 @@ abstract class Settings
      * @param string $newSettingItem
      * @param string $position (after or before)
      * @return bool
+     * @SuppressWarnings(PHPMD.LongVariable)
      */
     protected static function appendSettingKey(
         &$keys,
@@ -53,7 +56,7 @@ abstract class Settings
             );
 
             if ($existingSettingItemArrayKey > -1) {
-                EcomprocessingCommon::array_insert(
+                EcomprocessingCommon::arrayInsert(
                     $keys,
                     $existingSettingItemArrayKey + ($position == 'after' ? 1 : 0),
                     static::getCompleteSettingKey($newSettingItem)
@@ -103,10 +106,10 @@ abstract class Settings
      * @return bool
      * @throws \Exception
      */
-    public static function getIsInstalled()
+    public static function isInstalled()
     {
         if (empty(static::getPrefix())) {
-            throw new \Exception("SettingsPrefix not set");
+            throw new Exception("SettingsPrefix not set");
         }
 
         return defined(static::getPrefix() . "STATUS");
@@ -124,15 +127,15 @@ abstract class Settings
     public static function getIsAvailableOnCheckoutPage()
     {
         return
-            static::getIsConfigured() &&
-            static::getStatus();
+            static::isConfigured() &&
+            static::isEnabled();
     }
 
     /**
      * Get if module required settings are set properly
      * @return bool
      */
-    public static function getIsConfigured()
+    public static function isConfigured()
     {
         return
             !empty(static::getUserName()) &&
@@ -174,7 +177,7 @@ abstract class Settings
      * Get if module is enabled
      * @return bool
      */
-    public static function getStatus()
+    public static function isEnabled()
     {
         return static::getBoolSetting("STATUS");
     }
@@ -211,7 +214,7 @@ abstract class Settings
      * Get Module Test Mode (Staging or Production)
      * @return bool
      */
-    public static function getIsLiveMode()
+    public static function isLiveMode()
     {
         return static::getBoolSetting('ENVIRONMENT');
     }
@@ -220,7 +223,7 @@ abstract class Settings
      * Get Partial Capture Allowed setting value
      * @return bool
      */
-    public static function getIsPartialCaptureAllowed()
+    public static function isPartialCaptureAllowed()
     {
         return static::getBoolSetting("ALLOW_PARTIAL_CAPTURE");
     }
@@ -229,7 +232,7 @@ abstract class Settings
      * Get Partial Refund Allowed setting value
      * @return bool
      */
-    public static function getIsPartialRefundAllowed()
+    public static function isPartialRefundAllowed()
     {
         return static::getBoolSetting("ALLOW_PARTIAL_REFUND");
     }
@@ -238,7 +241,7 @@ abstract class Settings
      * Get Void Transaction Allowed setting value
      * @return bool
      */
-    public static function getIsVoidTransactionAllowed()
+    public static function isVoidTransactionAllowed()
     {
         return static::getBoolSetting("ALLOW_VOID_TRANSACTIONS");
     }

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -19,10 +20,12 @@
 
 namespace Ecomprocessing\Checkout;
 
-use \Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
-use \Ecomprocessing\Common as EcomprocessingCommon;
-use \Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
-use \Ecomprocessing\Checkout\TransactionProcess as EcomprocessingCheckoutTransactionProcess;
+use Ecomprocessing\Checkout\Settings as EcomprocessingCheckoutSettings;
+use Ecomprocessing\Common as EcomprocessingCommon;
+use Ecomprocessing\Checkout\Transaction as EcomprocessingCheckoutTransaction;
+use Ecomprocessing\Checkout\TransactionProcess as EcomprocessingCheckoutTransactionProcess;
+use Ecomprocessing\Helpers\SessionHelper;
+use Genesis\Api\Notification as EcomprocessingNotification;
 
 class Notification extends \Ecomprocessing\Base\Notification
 {
@@ -35,20 +38,23 @@ class Notification extends \Ecomprocessing\Base\Notification
     /**
      * Process Genesis Notification
      * @param array $requestData
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExitExpression)
      */
     protected static function processNotification($requestData)
     {
         global $db;
 
-        if (!EcomprocessingCheckoutSettings::getStatus()) {
-            exit(0);
+        if (!EcomprocessingCheckoutSettings::isEnabled()) {
+            exit('EMP plugin disabled');
         }
 
         parent::processNotification($requestData);
         EcomprocessingCheckoutTransactionProcess::bootstrap();
 
         try {
-            $notification = new \Genesis\API\Notification($requestData);
+            $notification = new EcomprocessingNotification($requestData);
 
             if ($notification->isAuthentic()) {
                 $notification->initReconciliation();
@@ -97,17 +103,17 @@ class Notification extends \Ecomprocessing\Base\Notification
                                                 WHERE `orders_id` = '" . abs(intval($order_id)) . "'");
 
                     if ($orderQuery->RecordCount() < 1) {
-                        exit(0);
+                        exit('Unknown order_id');
                     }
 
                     $order = $orderQuery->fields;
 
                     switch ($payment->status) {
-                        case \Genesis\API\Constants\Transaction\States::APPROVED:
+                        case \Genesis\Api\Constants\Transaction\States::APPROVED:
                             $order_status_id = EcomprocessingCheckoutSettings::getProcessedOrderStatusID();
                             break;
-                        case \Genesis\API\Constants\Transaction\States::ERROR:
-                        case \Genesis\API\Constants\Transaction\States::DECLINED:
+                        case \Genesis\Api\Constants\Transaction\States::ERROR:
+                        case \Genesis\Api\Constants\Transaction\States::DECLINED:
                             $order_status_id = EcomprocessingCheckoutSettings::getFailedOrderStatusID();
                             break;
                         default:
@@ -140,7 +146,7 @@ class Notification extends \Ecomprocessing\Base\Notification
                                                 WHERE `orders_id` = '" . abs(intval($order_id)) . "'");
 
                     if ($orderQuery->RecordCount() < 1) {
-                        exit(0);
+                        exit('Unknown order_id (reconcile)');
                     }
 
                     $order = $orderQuery->fields;
@@ -169,9 +175,8 @@ class Notification extends \Ecomprocessing\Base\Notification
                 $notification->renderResponse();
             }
         } catch (\Exception $e) {
-            //hide all exceptions
+            exit("Exception Notification: {$e->getMessage()}");
         }
-
         exit(0);
     }
 
@@ -184,9 +189,10 @@ class Notification extends \Ecomprocessing\Base\Notification
     {
         switch ($action) {
             case static::ACTION_CANCEL:
-                if (isset($_SESSION['order_summary']) && isset($_SESSION['order_summary']['order_number'])) {
+                $order_summary = SessionHelper::get('order_summary');
+                if ($order_summary && isset($order_summary['order_number'])) {
                     EcomprocessingCheckoutTransaction::setOrderStatus(
-                        $_SESSION['order_summary']['order_number'],
+                        $order_summary['order_number'],
                         EcomprocessingCheckoutSettings::getCanceledOrderStatusID()
                     );
                 }

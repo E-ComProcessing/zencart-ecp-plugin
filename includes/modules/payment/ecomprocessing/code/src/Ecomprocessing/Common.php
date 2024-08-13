@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Copyright (C) 2018 E-Comprocessing Ltd.
  *
@@ -62,7 +63,7 @@ class Common
      */
     public static function getServerRemoteAddress()
     {
-        return $_SERVER['REMOTE_ADDR'];
+        return filter_input(INPUT_SERVER, 'REMOTE_ADDR');
     }
 
     /**
@@ -115,7 +116,7 @@ class Common
      * @param int|string $position
      * @param mixed      $insert
      */
-    public static function array_insert(&$array, $position, $insert)
+    public static function arrayInsert(&$array, $position, $insert)
     {
         if (is_int($position)) {
             array_splice($array, $position, 0, $insert);
@@ -133,7 +134,7 @@ class Common
      * Get If SSL Enabled for the Front Site
      * @return bool
      */
-    public static function getIsSSLEnabled()
+    public static function isSSLEnabled()
     {
         return
             (
